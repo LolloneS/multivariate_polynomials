@@ -33,6 +33,21 @@
          (cond ((>= mtd 0) mtd)
                (T (error "Grado minore di 0"))))))
 
+;;; Uguale al metodo sopra ma il prof usa due nomi diversi
+(defun monomial-degree (mono)
+  (and (= (length mono) 4)
+       (let ((mtd (third mono)))
+         (cond ((>= mtd 0) mtd)
+               (T (error "Grado minore di 0"))))))
+
+;;; Returns the monomial's coefficient
+(defun monomial-coefficient (mono)
+  (and (= (length mono) 4)
+       (let ((coeff (second mono)))
+         (cond ((numberp coeff) coeff)
+               (t (error "Il coeff non è un numero"))))))
+
+
 ;;; (m coefficient total-degree vars-n-powers)
 (defun is-monomial (m)
   (and (listp m)
@@ -70,4 +85,6 @@
          (and (listp ms)
               (every #'is-monomial ms)))))
 
-
+(defun coefficients (p)
+  (setq monomials (poly-monomials p))
+  (mapcar 'monomial-coefficient monomials))
