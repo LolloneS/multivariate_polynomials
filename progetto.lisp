@@ -19,6 +19,13 @@
          (cond ((null vps) nil)
                (T vps)))))
 
+;;; Uguale al metodo sopra ma il prof usa due nomi diversi
+(defun varpowers (mono)
+  (and (= (length mono) 4)
+       (let ((vps (fourth mono)))
+         (cond ((null vps) nil)
+               (T vps)))))
+
 ;;; Returns the monomial's TD
 (defun monomial-total-degree (mono)
   (and (= (length mono) 4)
