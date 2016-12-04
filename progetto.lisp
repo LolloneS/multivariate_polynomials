@@ -49,6 +49,12 @@
               (>= p 0)
               (symbolp v)))))
 
+;;; Returns the list of all the monomials in a poly
+(defun poly-monomials (p)
+  (rest p)
+  )
+
+
 ;;; (poly monomials)
 (defun is-polynomial (p)
   (and (listp p)
@@ -56,4 +62,5 @@
        (let ((ms (poly-monomials p)))
          (and (listp ms)
               (every #'is-monomial ms)))))
+
 
