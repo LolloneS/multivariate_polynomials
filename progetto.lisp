@@ -86,5 +86,5 @@
               (every #'is-monomial ms)))))
 
 (defun coefficients (p)
-  (setq monomials (poly-monomials p))
+  (setf monomials (poly-monomials p))
   (mapcar 'monomial-coefficient monomials))
