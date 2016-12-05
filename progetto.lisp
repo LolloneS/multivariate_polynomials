@@ -44,11 +44,11 @@
 (defun monomial-coefficient (mono)
   (and (= (length mono) 4)
        (let ((coeff (second mono)))
-         (cond ((numberp coeff) coeff)
-               (t (error "Il coeff non è un numero"))))))
+         (if (numberp coeff) coeff (error "Il coeff non è un numero")))))
 
 
 ;;; (m coefficient total-degree vars-n-powers)
+;;; controlla totaldegree
 (defun is-monomial (m)
   (and (listp m)
        (eq 'm (first m))
@@ -86,5 +86,5 @@
               (every #'is-monomial ms)))))
 
 (defun coefficients (p)
-  (setf monomials (poly-monomials p))
-  (mapcar 'monomial-coefficient monomials))
+  (let ((monomials (poly-monomials p)))
+  (mapcar 'monomial-coefficient monomials)))
