@@ -1,5 +1,3 @@
-;;; RENZI A CASA!!!
-
 ;;; Returns the exponent from a variable (v Exp VarSymbol)
 
 (defun varpower-power (vp)
@@ -49,6 +47,10 @@
        (let ((coeff (second mono)))
          (if (numberp coeff) coeff (error "Il coeff non ï¿½ un numero")))))
 
+(defun monomial-vars-and-powers (mono)
+  (and (= (length mono) 4)
+       (let ((vps (fourth mono)))
+         (if (listp vps) vps (error "VPs non è una lista")))))
 
 ;;; (m coefficient total-degree vars-n-powers)
 ;;; controlla totaldegree
@@ -90,4 +92,10 @@
 
 (defun coefficients (p)
   (let ((monomials (poly-monomials p)))
-  (mapcar 'monomial-coefficient monomials)))
+    (mapcar 'monomial-coefficient monomials)))
+
+(defun poly-variables (p)
+  (let ((monomials (poly-monomials p)))
+    (mapcar 'monomial-vars-and-powers monomials)))
+  ) 
+
