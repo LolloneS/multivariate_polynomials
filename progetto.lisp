@@ -1,16 +1,19 @@
+;;; RENZI A CASA!!!
+
 ;;; Returns the exponent from a variable (v Exp VarSymbol)
+
 (defun varpower-power (vp)
   (let ((pow (second vp)))
     (cond ((numberp pow) pow)
-	  (t (error "L'esponente non è un numero")))))
+	  (t (error "L'esponente non ï¿½ un numero")))))
 
-;;; Returns the varsymbol from a variable (v Exp VarSymbol)  
+;;; Returns the varsymbol from a variable (v Exp VarSymbol)
 (defun varpower-symbol (vp)
   (let ((vs (third vp)))
     (cond ((and
 	    (atom vs)
 	    (not (numberp vs))) vs)
-	  (t (error "La variabile non è un carattere")))))
+	  (t (error "La variabile non ï¿½ un carattere")))))
 
 ;;; Returns the monomial's VPs
 (defun monomial-vars-and-powers (mono)
@@ -44,7 +47,7 @@
 (defun monomial-coefficient (mono)
   (and (= (length mono) 4)
        (let ((coeff (second mono)))
-         (if (numberp coeff) coeff (error "Il coeff non è un numero")))))
+         (if (numberp coeff) coeff (error "Il coeff non ï¿½ un numero")))))
 
 
 ;;; (m coefficient total-degree vars-n-powers)
