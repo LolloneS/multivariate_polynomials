@@ -19,20 +19,27 @@
     (cond ((and
 	    (atom vs)
 	    (not (numberp vs))) vs)
-	  (T (error "La variabile non e'  un carattere")))))
+	  (T (error "La variabile non e' un carattere")))))
 
+;;; Returns the monomial's Vars and Powers
 (defun varpowers (mono)
   (and (= (length mono) 4)
        (let ((vps (fourth mono)))
-          (if (null vps) nil (vps)))))
+	 (if (null vps) nil (vps)))))
+
+;;; Returns the monomial's Vars and Powers
+(defun monomial-vars-and-powers (mono)
+  (and (= (length mono) 4)
+       (let ((vps (fourth mono)))
+         (if (listp vps) vps (error "VPs non e' una lista")))))
 
 ;;; Returns the monomial's TD
 (defun monomial-total-degree (mono)
   (and (= (length mono) 4)
-        (let ((mtd (third mono)))
-          (if (>= mtd 0) mtd (error "Grado minore di 0")))))
+       (let ((mtd (third mono)))
+	 (if (>= mtd 0) mtd (error "Grado minore di 0")))))
 
-;;; Uguale al metodo sopra ma il prof usa due nomi diversi
+;;; Returns the monomial's TD
 (defun monomial-degree (mono)
   (and (= (length mono) 4)
        (let ((mtd (third mono)))
@@ -42,26 +49,26 @@
 (defun monomial-coefficient (mono)
   (and (= (length mono) 4)
        (let ((coeff (second mono)))
-         (if (numberp coeff) coeff (error "Il coeff non � un numero")))))
+         (if (numberp coeff) coeff (error "Il coeff non e' un numero")))))
 
-(defun monomial-vars-and-powers (mono)
-  (and (= (length mono) 4)
-       (let ((vps (fourth mono)))
-         (if (listp vps) vps (error "VPs non � una lista")))))
-
-;; T if m is a monomial
+#|
+TRUE if m is a monomial
+Checks: 
+-whether the first element in the list equals "m"
+-whether the total degree is an integer >= 0
+-whether vps is a list and every element of it is a VarPower
+|#
 (defun is-monomial (m)
   (and (listp m)
        (eq 'm (first m))
        (let ((mtd (monomial-total-degree m))
-             (vps (monomial-vars-and-powers m))
-	     )
+             (vps (monomial-vars-and-powers m)))
 	 (and (integerp mtd)
 	      (>= mtd 0)
 	      (listp vps)
 	      (every #'is-varpower vps)))))
 
-;; T if vp is a list of varpower
+;;; T if vp is a list of varpowers
 (defun is-varpower (vp)
   (and (listp vp)
        (eq 'v (first vp))
@@ -78,7 +85,7 @@
   )
 
 
-;; T if p is a polynomial
+;;; T if p is a polynomial
 (defun is-polynomial (p)
   (and (listp p)
        (eq 'poly (first p))
@@ -86,25 +93,25 @@
          (and (listp ms)
               (every #'is-monomial ms)))))
 
-;; Returns the list of all the coefficients in a poly
+;;; Returns the list of all the coefficients in a poly
 (defun coefficients (p)
   (let ((monomials (poly-monomials p)))
     (mapcar 'monomial-coefficient monomials)))
 
 
-;; Returns the list of all the VPs in a poly
+;;; Returns the list of all the VPs in a poly
 (defun poly-variables (p)
   (apply #'append
-    (let ((monomials (poly-monomials p)))
-             (mapcar 'monomial-vars-and-powers monomials))))
+	 (let ((monomials (poly-monomials p)))
+	   (mapcar 'monomial-vars-and-powers monomials))))
 
 
-;; Returns the list of all the variables in a poly
+;;; Returns the list of all the variables in a poly
 (defun variables (p)
-      (mapcar #'varpower-symbol
-        (apply #'append
-         (mapcar #'monomial-vars-and-powers
-                  (poly-monomials p)))))
+  (mapcar #'varpower-symbol
+	  (apply #'append
+		 (mapcar #'monomial-vars-and-powers
+			 (poly-monomials p)))))
 
 
 ;;; end of file -- progetto.lisp
