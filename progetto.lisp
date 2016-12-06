@@ -13,14 +13,7 @@
 	    (not (numberp vs))) vs)
 	  (t (error "La variabile non � un carattere")))))
 
-;;; Returns the monomial's VPs
-(defun monomial-vars-and-powers (mono)
-  (and (= (length mono) 4)
-       (let ((vps (fourth mono)))
-         (cond ((null vps) nil)
-               (T vps)))))
 
-;;; Uguale al metodo sopra ma il prof usa due nomi diversi
 (defun varpowers (mono)
   (and (= (length mono) 4)
        (let ((vps (fourth mono)))
@@ -30,7 +23,7 @@
 ;;; Returns the monomial's TD
 (defun monomial-total-degree (mono)
   (and (= (length mono) 4)
-       (let ((mtd (third mono)))
+        (let ((mtd (third mono)))
          (cond ((>= mtd 0) mtd)
                (T (error "Grado minore di 0"))))))
 
@@ -96,6 +89,12 @@
 
 (defun poly-variables (p)
   (let ((monomials (poly-monomials p)))
-    (mapcar 'monomial-vars-and-powers monomials)))
-  ) 
+    (mapcar 'monomial-vars-and-powers monomials))) 
 
+(defun variables (p)
+      (mapcar #'varpower-symbol
+        (apply #'append
+         (mapcar #'monomial-vars-and-powers 
+                  (poly-monomials p)))))   
+         
+    
