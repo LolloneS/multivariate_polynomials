@@ -6,7 +6,6 @@
 
 ;;;; Multivariate-Polynomials
 
-; commento prova branch testing
 
 ;;; Returns the exponent from a variable (v Exp VarSymbol)
 (defun varpower-power (vp)
