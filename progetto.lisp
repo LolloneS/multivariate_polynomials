@@ -113,5 +113,16 @@ Checks:
 		 (mapcar #'monomial-vars-and-powers
 			 (poly-monomials p)))))
 
+;;; Returns the max degree in the poly
+(defun maxdegree (p)
+(maximum (mapcar #'monomial-total-degree
+          (poly-monomials p))))
+
+(defun maximum (l)
+  (if (= (length l) 1)
+      (car l)
+      (if (> (car l) (maximum (cdr l)))
+          (car l)
+          (maximum (cdr l)))))
 
 ;;; end of file -- progetto.lisp
