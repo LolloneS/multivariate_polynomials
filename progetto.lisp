@@ -6,10 +6,6 @@
 
 ;;;; Multivariate-Polynomials
 
-<<<<<<< HEAD
-
-=======
->>>>>>> master
 
 ;;; Returns the exponent from a variable (v Exp VarSymbol)
 (defun varpower-power (vp)
@@ -56,7 +52,7 @@
 
 #|
 TRUE if m is a monomial
-Checks: 
+Checks:
 -whether the first element in the list equals "m"
 -whether the total degree is an integer >= 0
 -whether vps is a list and every element of it is a VarPower
@@ -120,7 +116,6 @@ Checks:
 (defun maxdegree (p)
 (maximum (mapcar #'monomial-total-degree
           (poly-monomials p))))
-<<<<<<< HEAD
 
 (defun maximum (l)
   (if (= (length l) 1)
@@ -129,14 +124,4 @@ Checks:
           (car l)
           (maximum (cdr l)))))
 
-=======
-
-(defun maximum (l)
-  (if (= (length l) 1)
-      (car l)
-      (if (> (car l) (maximum (cdr l)))
-          (car l)
-          (maximum (cdr l)))))
-
->>>>>>> master
 ;;; end of file -- progetto.lisp
