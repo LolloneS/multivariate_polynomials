@@ -53,7 +53,7 @@
 
 #|
 TRUE if m is a monomial
-Checks: 
+Checks:
 -whether the first element in the list equals "m"
 -whether the total degree is an integer >= 0
 -whether vps is a list and every element of it is a VarPower
@@ -118,6 +118,7 @@ Checks:
   (maximum (mapcar #'monomial-total-degree
 		   (poly-monomials p))))
 
+;;; Returns the maximum in a list
 (defun maximum (l)
   (if (= (length l) 1)
       (car l)
