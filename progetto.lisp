@@ -7,6 +7,7 @@
 ;;;; Multivariate-Polynomials
 
 
+
 ;;; Returns the exponent from a variable (v Exp VarSymbol)
 (defun varpower-power (vp)
   (let ((pow (second vp)))
@@ -114,14 +115,29 @@ Checks:
 
 ;;; Returns the max degree in the poly
 (defun maxdegree (p)
-(maximum (mapcar #'monomial-total-degree
-          (poly-monomials p))))
+  (maximum (mapcar #'monomial-total-degree
+		   (poly-monomials p))))
 
+;;; Returns the maximum in a list
 (defun maximum (l)
   (if (= (length l) 1)
       (car l)
       (if (> (car l) (maximum (cdr l)))
           (car l)
           (maximum (cdr l)))))
+
+;;; Returns the min degree in the poly
+(defun mindegree (p)
+  (minimum (mapcar #'monomial-total-degree
+		   (poly-monomials p))))
+
+;;; Returns the minimum in a list
+(defun minimum (l)
+  (if (= (length l) 1)
+      (car l)
+      (if (< (car l) (minimum (cdr l)))
+          (car l)
+          (minimum (cdr l)))))
+
 
 ;;; end of file -- progetto.lisp
