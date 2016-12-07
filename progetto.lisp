@@ -130,6 +130,7 @@ Checks:
   (minimum (mapcar #'monomial-total-degree
 		   (poly-monomials p))))
 
+;;; Returns the minimum in a list
 (defun minimum (l)
   (if (= (length l) 1)
       (car l)
