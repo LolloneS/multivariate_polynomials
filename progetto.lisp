@@ -116,32 +116,64 @@ Checks:
 ;;; Returns the max degree in the poly
 (defun maxdegree (p)
   (if (is-polynomial p)
-      (maximum (mapcar #'monomial-total-degree
+      (maximum-in-list (mapcar #'monomial-total-degree
 		       (poly-monomials p)))
       (error "P is not a polynomial")))
 
 ;;; Returns the maximum in a list
-(defun maximum (l)
+(defun maximum-in-list (l)
   (if (= (length l) 1)
       (car l)
-      (if (> (car l) (maximum (cdr l)))
+      (if (> (car l) (maximum-in-list (cdr l)))
           (car l)
-          (maximum (cdr l)))))
+          (maximum-in-list (cdr l)))))
 
 ;;; Returns the min degree in the poly
 (defun mindegree (p)
   (if (is-polynomial p)
-      (minimum (mapcar #'monomial-total-degree
+      (minimum-in-list (mapcar #'monomial-total-degree
 		       (poly-monomials p)))
       (error "P is not a polynomial")))
 
 ;;; Returns the minimum in a list
-(defun minimum (l)
+(defun minimum-in-list (l)
   (if (= (length l) 1)
       (car l)
-      (if (< (car l) (minimum (cdr l)))
+      (if (< (car l) (minimum-in-list (cdr l)))
 	  (car l)
-	  (minimum (cdr l)))))
+	  (minimum-in-list (cdr l)))))
 
+;;; Checks whether the list contains only numbers and lists (recursively)
+(defun check-only-numbers-lists-in-list (expr)
+  (let ((head (first expr)) (tail (rest expr)))
+    (cond ((null expr) t)
+	  ((numberp head) (check-only-numbers-lists-in-list tail))
+	  ((listp head) (and (check-expression-contains-no-variables head) (check-expression-contains-no-variables tail)))
+	  (t (error "C'e' un problema con l'input...")))))
+
+
+;;; Checks whether the expression contains variables
+;;; in case it begins with /
+(defun check-expression-contains-no-variables (expr)
+  (let ((head (first expr)) (tail (rest expr)))
+    (cond ((null expr) t)
+	  ((listp head) (and (check-expression-contains-no-variables head) (check-expression-contains-no-variables tail)))
+	  ((numberp head) (error "La struttura non e' corretta"))
+					; se il primo della lista e' un operatore aritmetico, controllo che il resto della lista sia fatto di numeri e liste
+	  ((numberp (position head '(+ - * /))) (check-only-numbers-lists-in-list tail))
+	  (t (error "Ci sono variabili in una posizione sbagliata!"))
+	  )))
+
+
+;;; as-monomial
+(defun as-monomial (expr)
+  (let ((head (first expr)))
+    (cond ((and (or (eql head '-) (eql head '+) (eql head '/)) (check-expression-contains-no-variables expr))
+	   (let ((coeff (coerce (eval expr) 'float))) (list 'm coeff 0 ()))) ;; solo numeri TODO
+	  ((eql head '*) 6) ; primo simbolo * e' un prodotto di piu' variabili || TODO
+	  ((numberp head) (list 'm head 0 ())) ;coefficiente intero
+	  ((symbolp head) (list 'm 1 1 (list 'v 1 head))) ; una sola variabile
+	  (t (error "The expression can't be parsed as a monomial")) ; errore
+	  )))
 
 ;;; end of file -- progetto.lisp
