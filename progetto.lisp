@@ -115,8 +115,10 @@ Checks:
 
 ;;; Returns the max degree in the poly
 (defun maxdegree (p)
-  (maximum (mapcar #'monomial-total-degree
-		   (poly-monomials p))))
+  (if (is-polynomial p)
+      (maximum (mapcar #'monomial-total-degree
+		       (poly-monomials p)))
+      (error "P is not a polynomial")))
 
 ;;; Returns the maximum in a list
 (defun maximum (l)
@@ -128,16 +130,18 @@ Checks:
 
 ;;; Returns the min degree in the poly
 (defun mindegree (p)
-  (minimum (mapcar #'monomial-total-degree
-		   (poly-monomials p))))
+  (if (is-polynomial p)
+      (minimum (mapcar #'monomial-total-degree
+		       (poly-monomials p)))
+      (error "P is not a polynomial")))
 
 ;;; Returns the minimum in a list
 (defun minimum (l)
   (if (= (length l) 1)
       (car l)
       (if (< (car l) (minimum (cdr l)))
-          (car l)
-          (minimum (cdr l)))))
+	  (car l)
+	  (minimum (cdr l)))))
 
 
 ;;; end of file -- progetto.lisp
