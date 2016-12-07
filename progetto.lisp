@@ -7,7 +7,6 @@
 ;;;; Multivariate-Polynomials
 
 
-
 ;;; Returns the exponent from a variable (v Exp VarSymbol)
 (defun varpower-power (vp)
   (let ((pow (second vp)))
@@ -53,7 +52,7 @@
 
 #|
 TRUE if m is a monomial
-Checks: 
+Checks:
 -whether the first element in the list equals "m"
 -whether the total degree is an integer >= 0
 -whether vps is a list and every element of it is a VarPower
