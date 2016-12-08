@@ -6,3 +6,8 @@ controlla primo elemento:
 	  -se e' diviso, deve essere fatto solo di numeri moltiplicati e divisi
 	  -se e' una variabile, e' solo quella variabile - tipo x, y^2, u^3
 	  -altrimenti errore
+
+in polyval potrebbe essere utile usare make-frame?
+NON USARE DELETE[IF]
+in caso usa remove[if]
+
