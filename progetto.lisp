@@ -27,18 +27,6 @@
        (let ((vps (fourth mono)))
 	 (if (null vps) nil (vps)))))
 
-;;; Returns the monomial's Vars and Powers
-(defun monomial-vars-and-powers (mono)
-  (and (= (length mono) 4)
-       (let ((vps (fourth mono)))
-         (if (listp vps) vps (error "VPs non e' una lista")))))
-
-;;; Returns the monomial's TD
-(defun monomial-total-degree (mono)
-  (and (= (length mono) 4)
-       (let ((mtd (third mono)))
-	 (if (>= mtd 0) mtd (error "Grado minore di 0")))))
-
 ;;; Returns the monomial's TD
 (defun monomial-degree (mono)
   (and (= (length mono) 4)
@@ -61,8 +49,8 @@ Checks:
 (defun is-monomial (m)
   (and (listp m)
        (eq 'm (first m))
-       (let ((mtd (monomial-total-degree m))
-             (vps (monomial-vars-and-powers m)))
+       (let ((mtd (monomial-degree m))
+             (vps (varpowers m)))
 	 (and (integerp mtd)
 	      (>= mtd 0)
 	      (listp vps)
@@ -83,7 +71,6 @@ Checks:
 (defun poly-monomials (p)
   (rest p)
   )
-
 
 ;;; T if p is a polynomial
 (defun is-polynomial (p)
@@ -142,7 +129,7 @@ Checks:
       (if (< (car l) (minimum-in-list (cdr l)))
 	  (car l)
 	  (minimum-in-list (cdr l)))))
-
+#|
 ;;; Checks whether the list contains only numbers and lists (recursively)
 (defun check-only-numbers-lists-in-list (expr)
   (let ((head (first expr)) (tail (rest expr)))
@@ -175,5 +162,7 @@ Checks:
 	  ((symbolp head) (list 'm 1 1 (list 'v 1 head))) ; una sola variabile
 	  (t (error "The expression can't be parsed as a monomial")) ; errore
 	  )))
+|#
+
 
 ;;; end of file -- progetto.lisp
