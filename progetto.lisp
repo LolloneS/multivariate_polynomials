@@ -141,25 +141,30 @@ Checks:
     (if (equal (first expr) 'expt) T NIL)))
 
 (defun parse-power(expr)
-  (if (is-power-not-parsed expr) (list 'm 1 (third expr) (second expr)) nil))
+  (if (is-power-not-parsed expr) 
+      (list 'm 1 (third expr) (second expr)) nil))
 
 (defun parse-power-negative-coeff(expr)
-  (if (is-power-not-parsed expr) (list 'm -1 (third expr) (second expr)) nil))
+  (if (is-power-not-parsed expr) 
+      (list 'm -1 (third expr) (second expr)) nil))
 
 (defun is-operator(expr)
-  (if (or (eql expr '*) (eql expr '/) (eql expr '-) (eql expr '+)) T NIL))
+  (if (or (eql expr '*) (eql expr '/) (eql expr '-) (eql expr '+)) 
+      T NIL))
 
 (defun build-coefficient(expr)
-  (if (eval-as-number (first expr)) (* 1 (first expr) (build-coefficient (rest expr))) 1))
+  (if (eval-as-number (first expr)) 
+      (* 1 (eval (first expr)) (build-coefficient (rest expr))) 1))
       
 
-(defun build-varpowers(expr)
-  (let ((head (first expr)))
+(defun build-varpowers(expr td)
+  (let ((head (first expr)) (tail (rest expr)))
     (cond ((and (listp head) (not (null head)) (equal (first head) 'expt))
-           (append (list (list 'v (third head) (second head))) (build-varpowers (rest expr))))
-          ((and (symbolp head) (not (null head))) (append (list (list 'v 1 head)) (build-varpowers (rest expr))))
-          ((numberp head) (build-varpowers (rest expr)))
-          ((null head) nil)
+           (append (build-varpowers tail (+ (eval td) (eval (third head)))) (list (list 'v (third head) (second head)))))
+          ((and (symbolp head) (not (null head))) 
+           (append (build-varpowers tail (+ 1 (eval td))) (list (list 'v 1 head)) ))
+          ((numberp (eval head)) (build-varpowers tail td))
+          ((null head) (list td))
           )))
 	    
 
@@ -168,13 +173,14 @@ Checks:
   (if (eval-as-number expr)
       ;; se e' solo un numero, calcola il coefficiente e ritorna il monomio
       (list 'm (eval expr) 0 nil)
-    (let ((head (first expr)))
+    (let ((head (first expr)) (tail (rest expr)))
       (if (is-operator head) ;;caso serio
           (cond ((equal head '-)
-                 (if (listp (second expr)) (parse-power-negative-coeff (second expr)) (list 'm -1 1 (second expr))))
+                 (if (listp (second expr)) 
+                     (parse-power-negative-coeff (second expr)) (list 'm -1 1 (second expr))))
                 ((equal head '*)
-                 (list 'm (build-coefficient (rest expr)) (build-varpowers (rest expr)))))
-        (if (is-power-not-parsed head) (parse-power head) (list 'm 1 1 (first expr)))))))
+                 (append (list 'm) (list (build-coefficient tail)) (build-varpowers tail 0))))
+        (if (is-power-not-parsed head) (parse-power head) (list 'm 1 1 head))))))
 
 
 
