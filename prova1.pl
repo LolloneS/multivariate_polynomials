@@ -257,7 +257,7 @@ as_monomial_unordered(Head * A ^ B, m(C, TD, [v(B, A) | VPs])) :-
     TD is TD1 + B.
 as_monomial_unordered(UglyCoeff, m(Z, 0, [])) :-
     UglyCoeff \= 0, !,
-    Z is UglyCoeff, !.
+    arithmetic_expression_value(UglyCoeff, Z).
 
 %%% compare_variables/3
 % This predicate -combined with compare_monomials/3- is used
