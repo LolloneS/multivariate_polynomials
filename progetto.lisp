@@ -155,7 +155,7 @@ Checks:
 (defun build-coefficient(expr)
   (if (eval-as-number (first expr)) 
       (* 1 (eval (first expr)) (build-coefficient (rest expr))) 1))
-      
+
 
 (defun build-varpowers(expr td)
   (let ((head (first expr)) (tail (rest expr)))
@@ -166,40 +166,25 @@ Checks:
           ((numberp (eval head)) (build-varpowers tail td))
           ((null head) (list td))
           )))
-	    
+
 
 
 (defun as-monomial(expr)
   (if (eval-as-number expr)
       ;; se e' solo un numero, calcola il coefficiente e ritorna il monomio
       (list 'm (eval expr) 0 nil)
-    (let ((head (first expr)) (tail (rest expr)))
-      (if (is-operator head) ;;caso serio
-          (cond ((equal head '-)
-                 (if (listp (second expr)) 
-                     (parse-power-negative-coeff (second expr)) (list 'm -1 1 (second expr))))
-                ((equal head '*)
-                 (append (list 'm) (list (build-coefficient tail)) (build-varpowers tail 0))))
-        (if (is-power-not-parsed head) (parse-power head) (list 'm 1 1 head))))))
-
-
+      (let ((head (first expr)) (tail (rest expr)))
+	(if (is-operator head) ;;caso serio
+	    (cond ((equal head '-)
+		   (if (listp (second expr)) 
+		       (parse-power-negative-coeff (second expr)) (list 'm -1 1 (second expr))))
+		  ((equal head '*)
+		   (if (eql (build-coefficient tail) 0) (list 'm 0 0 nil)
+		       (append (list 'm) (list (build-coefficient tail)) (build-varpowers tail 0)))))
+	    (if (is-power-not-parsed head) (parse-power head) (list 'm 1 1 head))))))
 
 
 #|
-;;; as-monomial
-(defun as-monomial (expr)
-  (let ((head (first expr)))
-    (cond ((and (or (eql head '-) (eql head '+) (eql head '/)) (check-expression-contains-no-variables expr))
-	   (let ((coeff (coerce (eval expr) 'float))) (list 'm coeff 0 ()))) ;; solo numeri TODO
-	  ((eql head '*) 6) ; primo simbolo * e' un prodotto di piu' variabili || TODO
-	  ((numberp head) (list 'm head 0 ())) ;coefficiente intero
-	  ((symbolp head) (list 'm 1 1 (list 'v 1 head))) ; una sola variabile
-	  (t (error "The expression can't be parsed as a monomial")) ; errore
-	  )))
-
-
-
-
 ;;; Checks whether the list contains only numbers and lists (recursively)
 (defun check-only-numbers-lists-in-list (expr)
   (let ((head (first expr)) (tail (rest expr)))
