@@ -1,11 +1,14 @@
 % -*- Mode: Prolog -*-
 
-%%% Controlli
+%%% sum_degrees_variables/2
+% TRUE if TotalDegree is the sum of all VP's exponent
 sum_degrees_variables([], 0) :- !.
 sum_degrees_variables([v(Exp, _Var) | Vs], TotalDegree) :-
     sum_degrees_variables(Vs, TotalDegree2), !,
     TotalDegree is Exp + TotalDegree2.
 
+%%% is_monomial/1
+% TRUE if the argument is a Monomial
 is_monomial(m(_C, TD, VPs)) :-
     integer(TD),
     TD >= 0,
@@ -13,11 +16,15 @@ is_monomial(m(_C, TD, VPs)) :-
     foreach(member(V, VPs), is_varpower(V)),
     sum_degrees_variables(VPs, TD).
 
+%%% is_varpower/1
+% TRUE if the argument is a VP
 is_varpower(v(Power, VarSymbol)) :-
     integer(Power),
     Power >= 0,
     atom(VarSymbol).
 
+%%% is_polynomial/1
+% TRUE if the argument is a list of Momomials
 is_polynomial(poly(Monomials)) :-
     is_list(Monomials),
     foreach(member(M, Monomials), is_monomial(M)).
@@ -101,7 +108,7 @@ get_variables_from_polynomialCall(poly([HeadMono | RestMono]),
     get_variables_from_polynomialCall(poly(RestMono), ListaVar).
 
 %%% variables/2
-% Uses the methods defined above
+% Returns the list of all variables in a poly
 variables(poly([]), []) :- !.
 variables(Poly, Variables) :-
     to_polynomial(Poly, PolyParsed),
@@ -112,7 +119,7 @@ variables(Poly, Variables) :-
     sort(SVList, Variables).
 
 %%% mindegree/2
-% Gets the minimum degree of all the monomials in the polynomial
+% Gets the minimum degree of all the monomials in a polynomial
 mindegree(poly([]), 0) :- !.
 mindegree(Poly, Degree) :-
     to_polynomial(Poly, PolyParsed), !,
@@ -134,7 +141,7 @@ minInList([X | Xs], X):-
     X =< M.
 
 %%% maxdegree/2
-% Gets the maximum degree of all the monomials in the polynomial
+% Gets the maximum degree of all the monomials in a polynomial
 maxdegree(poly([]), 0) :- !.
 maxdegree(Poly, Degree) :-
     to_polynomial(Poly, PolyParsed), !,
@@ -189,7 +196,7 @@ sum_similar_monomials_in_poly(poly([A, B | Tail1]), poly(Tail2)) :-
     get_variables_from_monomial(B, VPs),
     get_coefficient_from_monomial(A, C1),
     get_coefficient_from_monomial(B, C2),
-    Z is C1 + C2, !,
+    Z is C1+C2, !,
     sum_similar_monomials_in_poly(poly([m(Z, TD, VPs) | Tail1]),
 				  poly(Tail2)).
 sum_similar_monomials_in_poly(poly([A, B | Tail1]),
@@ -204,23 +211,22 @@ pairlis([], M, M) :- !.
 pairlis([X | Xs], [Y | Ys], [X, Y | Zs]) :-
     pairlis(Xs, Ys, Zs).
 
-
 %%% as_monomial/2
-% TRUE if "Monomial" is the term which represents the resulting monomial
-% of "Expression" parsed
+% TRUE if Monomial is the term which represents the resulting monomial
+% of Expression parsed
 as_monomial(Expression, Monomial) :-
     as_monomialCall(Expression, MonomialUnreduced),
     reduce_monomial(MonomialUnreduced, Monomial).
 
 %%% as_monomialCall/2
 % TRUE if the 2nd argument is a Monomial parsed and sorted starting from an
-% Expression passed as 1st argument
+% Expression passed as the 1st argument
 as_monomialCall(Expression, m(C, TD, VPs)) :-
     as_monomial_unordered(Expression, m(C, TD, VPs2)),
     sort(2, @=<, VPs2, VPs).
 
 %%% as_monomial_unordered/2
-% This predicate manages the various cases without sorting the final monomial
+% This predicate pareses the 1st arg without sorting the resulting monomial
 as_monomial_unordered(0, m(0, 0, [])) :- !.
 as_monomial_unordered(-Mono, m(NC, TD, VPs)) :-
     !,
@@ -251,7 +257,7 @@ as_monomial_unordered(Head * A ^ B, m(C, TD, [v(B, A) | VPs])) :-
     TD is TD1 + B.
 as_monomial_unordered(UglyCoeff, m(Z, 0, [])) :-
     UglyCoeff \= 0, !,
-    arithmetic_expression_value(UglyCoeff, Z).
+    Z is UglyCoeff, !.
 
 %%% compare_variables/3
 % This predicate -combined with compare_monomials/3- is used
@@ -310,7 +316,7 @@ sort_monomials_in_polynomial(poly(Monomials), poly(SortedMonomials)) :-
 
 
 %%% as_polynomial/2
-% TRUE if "Polynomial" is the Expression parsed and without the monomials
+% TRUE if Polynomial is the Expression parsed and without the monomials
 % with coefficient = 0.
 as_polynomial(Expression, Polynomial) :-
     as_polynomialCall(Expression, PolynomialWith0s),
@@ -340,7 +346,7 @@ as_polynomial_unordered(Mono, poly([ParsedMono])) :-
 
 
 %%% to_polynomial/2
-% TRUE if "ParsedPoly" is the polynomial "Poly" parsed,
+% TRUE if ParsedPoly is the polynomial Poly parsed,
 % reduced and sorted by grade and lexicographical order.
 
 to_polynomial(Poly, Poly) :- is_polynomial(Poly), !.
@@ -349,7 +355,7 @@ to_polynomial(Poly, ParsedPoly) :- as_polynomial(Poly, ParsedPoly).
 %%% polyval/3
 % Evaluates a poly in a certain point in space.
 % TRUE if Value is the value of Polynomial in the point P = VariableValues
-% f.i: Polynomial = x^2 + y, VariableValues = [1, 2], Value = 1^2 + 2 = 3.
+% f.i.: Polynomial = x^2 + y, VariableValues = [1, 2], Value = 1^2 + 2 = 3.
 polyval(Polynomial, VariableValues, Value) :-
     polyvalCall(Polynomial, VariableValues, Value).
 
@@ -375,7 +381,7 @@ evaluate_poly(poly([m(C, TD, VPs) | OtherMonos]), Alternated, Value) :-
     Value is ValueMono + ValueRestPoly.
 
 %%% substitute_vars/3
-% The vars in the poly are substituted by their actual value
+% The vars in the poly are substituted by their actual values
 substitute_vars([], _, []) :- !.
 substitute_vars([v(Exp, Var)], [Var, NewValue], [v(Exp, NewValue)]) :- !.
 substitute_vars([v(Exp, Var)], [DifferentVar, _NewValue | Rest], Others) :-
@@ -390,8 +396,8 @@ substitute_vars([v(Exp, Var) | Vs], [Var2, _NewValue | Rest], Others) :-
     substitute_vars([v(Exp, Var) | Vs], Rest, Others).
 
 %%% substitute_mono/3
-% This predicate creates a new monomial by substituing the VarSymbol with
-% the corresponding value
+% This predicate creates a new monomial by substituing the VarSymbols with
+% the corresponding values
 substitute_mono(m(C, TD, VPs), Alternated, m(C, TD, ListOfVarsOk)) :-
     get_variables_from_monomial(m(C, TD, VPs), ListOfVars),
     substitute_vars(ListOfVars, Alternated, ListOfVarsOk).
@@ -411,7 +417,7 @@ evaluate_mono(m(C, TD, VPs), Alternated, Value) :-
     Value is C * ValueOfTheVars.
 
 %%% monomials/2
-% TRUE if "Monomials" is a list that cointains all monomials in "Poly"
+% TRUE if Monomials is a list that contains all monomials in Poly
 % reduced and sorted by grade and lexicographical order
 monomials(poly([]), []) :- !.
 monomials(Poly, Monomials):-
@@ -423,22 +429,21 @@ monomials(Poly, Monomials):-
 % to its opposite
 opposite_polynomial(poly([]), poly([])) :- !.
 opposite_polynomial(poly([m(C, TD, VPs) | Monos]),
-		    poly([m(NC, TD, VPs) | OppMonos])) :-
+		                poly([m(NC, TD, VPs) | OppMonos])) :-
     NC is -C,
     !,
     opposite_polynomial(poly(Monos), poly(OppMonos)).
 
-%%% reduce_all_monos\2
+%%% reduce_all_monos/2
 %
 reduce_all_monos(poly([]), poly([])) :- !.
 reduce_all_monos(poly([HeadMono | TailMono]),
-		 poly([HeadReduced | TailReduced])) :-
+                 poly([HeadReduced | TailReduced])) :-
     reduce_monomial(HeadMono, HeadReduced),
     reduce_all_monos(poly(TailMono), poly(TailReduced)).
 
 %%% remove_coeff_zero/2
 % Removes all the monomials with C = 0 from a Poly
-
 remove_coeff_zero(poly([]), poly([])) :- !.
 remove_coeff_zero(poly([m(0, _, _) | Tail]), poly(Tail2)) :-
     !,
@@ -449,16 +454,14 @@ remove_coeff_zero(poly([m(C, TD, VPs) | Tail]),
     remove_coeff_zero(poly(Tail), poly(Tail2)).
 
 %%% polyplus/3
-% TRUE if "Result" is the sum of "Poly1" and "Poly2"
-
+% TRUE if Result is the sum of Poly1 and Poly2
 polyplus(Poly1, Poly2, Result):-
     to_polynomial(Poly1, Poly1Parsed),
     to_polynomial(Poly2, Poly2Parsed),
     polyplus_call(Poly1Parsed, Poly2Parsed, Result).
 
 %%% polyplus_call/3
-% TRUE if the 3rd is the sum of the first and the second polynomial
-
+% TRUE if the 3rd arg is the sum of the first and the second polynomial
 polyplus_call(poly([]), poly([]), poly([])) :- !.
 polyplus_call(poly([]), poly(Monos), poly(SortedMonos)) :-
     sort_monomials_in_polynomial(poly(Monos), poly(SortedMonos)), !.
@@ -470,7 +473,7 @@ polyplus_call(poly(M1), poly(M2), poly(Z)) :-
     sum_similar_monomials_in_poly(poly(Z2), poly(Z)).
 
 %%% polyminus/3
-% TRUE if "Result" is the difference of "Poly1" and "Poly2"
+% TRUE if Result is the difference between Poly1 and Poly2
 polyminus(Poly1, Poly2, Result):-
     to_polynomial(Poly1, Poly1Parsed),
     to_polynomial(Poly2, Poly2Parsed),
@@ -479,7 +482,7 @@ polyminus(Poly1, Poly2, Result):-
 
 %%% polyminus_call/3
 % TRUE if the third arg is the difference between the first and the
-%second polynomial
+% second polynomial
 polyminus_call(poly([]), poly([]), poly([])) :- !.
 polyminus_call(poly([]), poly(Monos), poly(SortedMonos)) :-
     sort_monomials_in_polynomial(poly(Monos), poly(SortedMonos)), !.
@@ -493,8 +496,7 @@ polyminus_call(poly(M1), poly(M2), poly(Z)) :-
     remove_coeff_zero(poly(Z4), poly(Z)).
 
 %%% polytimes/3
-% TRUE if Result is the Polynomial resulting by the multiplication of
-% Poly1 and Poly2
+% TRUE if Result is Poly1 * Poly2
 polytimes(Poly1, Poly2, Result) :-
     to_polynomial(Poly1, Poly1Parsed), !,
     to_polynomial(Poly2, Poly2Parsed), !,
@@ -504,7 +506,6 @@ polytimes(Poly1, Poly2, Result) :-
 %%% polytimes_call/3
 % TRUE if 3rd argument is the product between the first and the
 % second polynomial passed as 1st and 2nd argument
-
 polytimes_call(poly([]), poly([]), poly([])) :- !.
 polytimes_call(poly([]), poly(_Monos), poly([])) :- !.
 polytimes_call(poly(_Monos), poly([]), poly([])) :- !.
@@ -518,29 +519,28 @@ polytimes_call(poly([Head1 | Tail1]), poly([Head2 | Tail2]),
 
 
 %%% multiply_variables/3
-% This predicate reduce similar variable summing their Exps
-
+% This predicate sums the similar variables in a Monomial
 multiply_variables([], [], []) :- !.
 multiply_variables(V, [], V) :- !.
 multiply_variables([], V, V) :- !.
 multiply_variables([v(Exp1, Var) | Vs1], [v(Exp2, Var) | Vs2],
-		   [v(Exp, Var) | Vs]) :-
+		               [v(Exp, Var) | Vs]) :-
     Exp is Exp1 + Exp2,
     !,
     multiply_variables(Vs1, Vs2, Vs).
 multiply_variables([v(Exp1, Var1) | Vs1], [v(Exp2, Var2) | Vs2],
-		   [v(Exp2, Var2) | Vs]) :-
+		               [v(Exp2, Var2) | Vs]) :-
     Var1 @>= Var2,
     !,
     multiply_variables([v(Exp1, Var1) | Vs1], Vs2, Vs).
 multiply_variables([v(Exp1, Var1) | Vs1], [v(Exp2, Var2) | Vs2],
-		   [v(Exp1, Var1) | Vs]) :-
+		               [v(Exp1, Var1) | Vs]) :-
     Var2 @>= Var1,
     !,
     multiply_variables(Vs1, [v(Exp2, Var2) | Vs2], Vs).
 
 %%% mono_times/3
-% This predicate makes the product between first arg and second arg
+% This predicate multiplies the first Monomial by the second one
 mono_times(m(0, _, _), m(_, _, _), m(0, 0, [])) :- !.
 mono_times(m(_, _, _), m(0, _, _), m(0, 0, [])) :- !.
 mono_times(M, [], M) :- !.
@@ -551,7 +551,7 @@ mono_times(m(C1, TD1, VPs1), m(C2, TD2, VPs2), m(C, TD, VPs)) :-
     multiply_variables(VPs1, VPs2, VPs).
 
 %%% print_vps/1
-% This predicate prints Variable and Exp of the VPs passed as argument
+% This predicate prints VarSymbol and Power of the VPs passed as argument
 print_vps([]) :- !.
 print_vps([v(1, Var)]) :-
     !,
@@ -562,7 +562,6 @@ print_vps([v(Exp, Var)]) :-
     write(Var),
     write(^),
     write(Exp).
-
 print_vps([v(Exp, Var) | VPs]) :-
     print_vps([v(Exp, Var)]),
     write(" * "),
@@ -575,7 +574,7 @@ pprint_polynomial(Poly) :-
     pprint_polynomial_call(PolyParsed).
 
 %%% pprint_polynomial_call/1
-% This predicate manages the actual screen-print of Poly
+% This predicate prints the Poly on the standard output
 pprint_polynomial_call(poly([])) :-
     write("Polinomio vuoto!").
 pprint_polynomial_call(poly([m(C, 0, [])])) :-
