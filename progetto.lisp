@@ -153,8 +153,10 @@ Checks:
       T NIL))
 
 (defun build-coefficient(expr)
-  (if (eval-as-number (first expr)) 
-      (* 1 (eval (first expr)) (build-coefficient (rest expr))) 1))
+  (if (null expr) 1 
+      (if (eval-as-number (first expr)) 
+	  (* 1 (eval (first expr)) (build-coefficient (rest expr)))
+	  (* 1 (build-coefficient (rest expr)))))) 
 
 
 (defun build-varpowers(expr td)
