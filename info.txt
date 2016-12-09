@@ -1,0 +1,13 @@
+as_monomial:
+
+controlla primo elemento:
+	  -se e' asterisco, e' un prodotto di piu variabili
+FATTO	  -se e' un numero e basta, (m numero 0 ())
+FATTO	  -se e' diviso, deve essere fatto solo di numeri moltiplicati e divisi
+	  -se e' una lista con primo elemento expt, potenza y^2, u^3
+	  -altrimenti errore
+
+in polyval potrebbe essere utile usare make-frame?
+NON USARE DELETE[IF]
+in caso usa remove[if]
+
