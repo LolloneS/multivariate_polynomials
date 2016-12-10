@@ -13,4 +13,4 @@ in caso usa remove[if]
 
 DOMANDE PER IL PROF:
 Input negativo di as-monomial è '(-x) o (- x)?
-Valore default monomio vuoto = ?
+Valore default vuoto come &optional?
