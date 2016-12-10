@@ -142,11 +142,11 @@ Checks:
 
 (defun parse-power(expr)
   (if (is-power-not-parsed expr) 
-      (list 'm 1 (third expr) (second expr)) nil))
+      (list 'm 1 (third expr) (list 'v (third expr) (second expr))) nil))
 
 (defun parse-power-negative-coeff(expr)
   (if (is-power-not-parsed expr) 
-      (list 'm -1 (third expr) (second expr)) nil))
+      (list 'm -1 (third expr) (list 'v (third expr) (second expr))) nil))
 
 (defun is-operator(expr)
   (if (or (eql expr '*) (eql expr '/) (eql expr '-) (eql expr '+)) 
@@ -179,12 +179,12 @@ Checks:
 	(if (is-operator head) ;;caso serio
 	    (cond ((equal head '-)
 		   (if (listp (second expr)) 
-		       (parse-power-negative-coeff (second expr)) (list 'm -1 1 (second expr))))
+		       (parse-power-negative-coeff (second expr)) (list 'm -1 1 (list 'v 1(second expr)))))
 		  ((equal head '*)
 		   (if (eql (build-coefficient tail) 0) (list 'm 0 0 nil)
                      (let ((vps (build-varpowers tail 0)))
                         (append (list 'm) (list (build-coefficient tail)) (list (first vps)) (list (rest vps)))))))
-          (if (is-power-not-parsed head) (parse-power head) (list 'm 1 1 head))))))
+          (if (is-power-not-parsed head) (parse-power head) (list 'm 1 1 (list 'v 1 head)))))))
 
 (defun as-polynomial(expr)
   (let ((head (first expr)) (tail (rest expr)))
