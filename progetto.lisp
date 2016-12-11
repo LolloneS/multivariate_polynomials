@@ -131,16 +131,19 @@ Checks:
 	  (car l)
 	  (minimum-in-list (cdr l)))))
 
+;;; If (eval expression) is a number, returns it. Else NIL
 (defun eval-as-number(expression)
   (let ((result (handler-case (eval expression)
 		  (error () nil)
 		  (warning () nil))))
     (if (numberp result) result nil)))
 
+;;; True if expr is an expression to be parsed
 (defun is-power-not-parsed(expr)
   (if (not (listp expr)) nil
-    (if (equal (first expr) 'expt) T NIL)))
+    (if (and (equal (first expr) 'expt) (symbolp (second expr)) (numberp (third expr))) T NIL)))
 
+;;; Parses an expression (expt VAR EXP) into the form (v EXP VAR)
 (defun parse-power(expr)
   (if (is-power-not-parsed expr) 
       (list 'm 1 (third expr) (list 'v (third expr) (second expr))) nil))
@@ -149,17 +152,19 @@ Checks:
   (if (is-power-not-parsed expr) 
       (list 'm -1 (third expr) (list 'v (third expr) (second expr))) nil))
 
+;;; True if expr is + or - or * or /
 (defun is-operator(expr)
   (if (or (eql expr '*) (eql expr '/) (eql expr '-) (eql expr '+)) 
       T NIL))
 
+;;; Evaluates the coefficient of a monomial
 (defun build-coefficient(expr)
   (if (null expr) 1 
       (if (eval-as-number (first expr)) 
 	  (* 1 (eval (first expr)) (build-coefficient (rest expr)))
 	  (* 1 (build-coefficient (rest expr)))))) 
 
-
+;;; Builds the VPs of a monomial
 (defun build-varpowers(expr td)
   (let ((head (first expr)) (tail (rest expr)))
     (cond ((and (listp head) (not (null head)) (equal (first head) 'expt))
@@ -170,8 +175,7 @@ Checks:
           ((null head) (list td))
           )))
 
-
-
+;;; Parses a monomial
 (defun as-monomial(expr)
   (if (eval-as-number expr)
       ;; se e' solo un numero, calcola il coefficiente e ritorna il monomio
@@ -187,12 +191,27 @@ Checks:
                         (append (list 'm) (list (build-coefficient tail)) (list (first vps)) (list (rest vps)))))))
           (if (is-power-not-parsed head) (parse-power head) (list 'm 1 1 (list 'v 1 head)))))))
 
-
+;;; Parses a polynomial
 (defun as-polynomial(expr)
   (when (not (null expr)) 
     (let ((head (first expr)) (tail (rest expr)))
       (if (is-operator head) (if (equal head '+) (append (list 'poly)(list (as-polynomial tail))))
-        (if (and (listp expr) (not (null tail))) (append (list (as-monomial head) (as-polynomial tail))) (list (as-monomial head)))))))
+	  (if (and (listp expr) (not (null tail))) (append (list (as-monomial head) (as-polynomial tail))) (list (as-monomial head)))))))
+
+;; This predicate checks if the variables in the monomial are equal
+(defun check-variables(expr)
+  (let ((variables1 (fourth (first expr))) (variables2 (fourth (second expr))))
+    (if (equal variables1 variables2) T NIL))
+    )
+
+;; This predicate sums the similar monomials in a polynomial
+(defun sum-similar-monomial(expr)
+  (let ((c1 (second (first expr))) (c2 (second (second expr))) (td (third (first expr))) (variables (fourth (first expr))))
+    (if (equal (rest expr) nil) (append expr) (if (check-variables expr)
+        (sum-similar-monomial (append (list (list 'm (+ c1 c2) td (list variables))) (rest (rest expr)))) (append (list (first expr)) (sum-similar-monomial (rest expr)))))))
+
+
+
 #|
 ;;; Checks whether the list contains only numbers and lists (recursively)
 (defun check-only-numbers-lists-in-list (expr)
