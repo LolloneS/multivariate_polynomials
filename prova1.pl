@@ -189,13 +189,7 @@ reduce_monomial_call(m(C, TD, [v(Degree1, Var), v(Degree2, DiffVar) | VPs]),
 % f.i. x + x -> 2 * x
 sum_similar_monomials_in_poly(poly([]), poly([])) :- !.
 sum_similar_monomials_in_poly(poly([X]), poly([X])) :- !.
-sum_similar_monomials_in_poly(poly([A, B | Tail1]), poly(Tail2)) :-
-    get_total_degree_from_monomial(A, TD),
-    get_total_degree_from_monomial(B, TD),
-    get_variables_from_monomial(A, VPs),
-    get_variables_from_monomial(B, VPs),
-    get_coefficient_from_monomial(A, C1),
-    get_coefficient_from_monomial(B, C2),
+sum_similar_monomials_in_poly(poly([m(C1, TD, VPs), m(C2, TD, VPs) | Tail1]), poly(Tail2)) :-
     Z is C1+C2, !,
     sum_similar_monomials_in_poly(poly([m(Z, TD, VPs) | Tail1]),
 				  poly(Tail2)).
