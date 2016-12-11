@@ -1,3 +1,4 @@
+
 ;;;; Mode: -*- Lisp -*-
 
 
@@ -186,20 +187,12 @@ Checks:
                         (append (list 'm) (list (build-coefficient tail)) (list (first vps)) (list (rest vps)))))))
           (if (is-power-not-parsed head) (parse-power head) (list 'm 1 1 (list 'v 1 head)))))))
 
+
 (defun as-polynomial(expr)
-  (let ((head (first expr)) (tail (rest expr)))
-    (cond ((is-monomial head) (append (list (as-monomial head)(as-monomial tail))))
-          ((is-operator head)
-           (if (equal head '+) (append (list as-monomial tail))))
-
-          
-          ((listp head) (append (list (as-monomial head)))))))
-             
-               
-               
-        
-    
-
+  (when (not (null expr)) 
+    (let ((head (first expr)) (tail (rest expr)))
+      (if (is-operator head) (if (equal head '+) (append (list 'poly)(list (as-polynomial tail))))
+        (if (and (listp expr) (not (null tail))) (append (list (as-monomial head) (as-polynomial tail))) (list (as-monomial head)))))))
 #|
 ;;; Checks whether the list contains only numbers and lists (recursively)
 (defun check-only-numbers-lists-in-list (expr)
