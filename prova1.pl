@@ -190,6 +190,7 @@ reduce_monomial_call(m(C, TD, [v(Degree1, Var), v(Degree2, DiffVar) | VPs]),
 sum_similar_monomials_in_poly(poly([]), poly([])) :- !.
 sum_similar_monomials_in_poly(poly([X]), poly([X])) :- !.
 sum_similar_monomials_in_poly(poly([m(C1, TD, VPs), m(C2, TD, VPs) | Tail1]), poly(Tail2)) :-
+    !,
     Z is C1+C2, !,
     sum_similar_monomials_in_poly(poly([m(Z, TD, VPs) | Tail1]),
 				  poly(Tail2)).
@@ -229,13 +230,13 @@ as_monomial_unordered(-Mono, m(NC, TD, VPs)) :-
 as_monomial_unordered(SingleVar, m(1, 1, [v(1, SingleVar)])) :-
     atom(SingleVar),
     !.
-as_monomial_unordered(SingleVar ^ Exp, m(1, 0, [])) :-
-    atom(SingleVar),
-    integer(Exp),
-    Exp == 0.
 as_monomial_unordered(SingleVar ^ Exp, m(1, Exp, [v(Exp, SingleVar)])) :-
+    Exp \= 0, !,
     atom(SingleVar), !,
     integer(Exp), !.
+as_monomial_unordered(SingleVar ^ Exp, m(1, 0, [])) :-
+    atom(SingleVar), !,
+    integer(Exp).
 as_monomial_unordered(Head * Tail, m(C, TD, [v(1, Tail) | VPs])) :-
     atom(Tail),	!,
     as_monomial_unordered(Head, m(C, TD1, VPs)),
