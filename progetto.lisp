@@ -157,12 +157,27 @@ Checks:
   (if (or (eql expr '*) (eql expr '/) (eql expr '-) (eql expr '+)) 
       T NIL))
 
+(defun compare-degrees (first-mono rest-monos)
+  (when (not (null first-mono))
+    (let ((degrees (list (monomial-degree first-mono) (monomial-degree rest-monos))))
+      (cond ((null first-mono) (not (null rest-monos)))
+            ((null rest-monos) nil)
+            ((= (first degrees) (second degrees)) t)
+            (t (< (first degrees) (second degrees)))))))
+
+(defun sort-poly (poly)
+  (let ((poly-copied (copy-list poly)))
+    (stable-sort poly-copied #'compare-degrees)
+    ;(compare-variables poly-copied)
+))
+
+
 ;;; Evaluates the coefficient of a monomial
 (defun build-coefficient(expr)
   (if (null expr) 1 
-      (if (eval-as-number (first expr)) 
-	  (* 1 (eval (first expr)) (build-coefficient (rest expr)))
-	  (* 1 (build-coefficient (rest expr)))))) 
+    (if (eval-as-number (first expr)) 
+        (* 1 (eval (first expr)) (build-coefficient (rest expr)))
+      (* 1 (build-coefficient (rest expr)))))) 
 
 ;;; Builds the VPs of a monomial
 (defun build-varpowers(expr td)
@@ -205,10 +220,10 @@ Checks:
     )
 
 ;; This predicate sums the similar monomials in a polynomial
-(defun sum-similar-monomial(expr)
-  (let ((c1 (second (first expr))) (c2 (second (second expr))) (td (third (first expr))) (variables (fourth (first expr))))
-    (if (equal (rest expr) nil) (append expr) (if (check-variables expr)
-        (sum-similar-monomial (append (list (list 'm (+ c1 c2) td (list variables))) (rest (rest expr)))) (append (list (first expr)) (sum-similar-monomial (rest expr)))))))
+(defun sum-similar-monomial(mono)
+  (let ((c1 (second (first mono))) (c2 (second (second mono))) (td (third (first mono))) (variables (fourth (first mono))))
+    (if (equal (rest mono) nil) (append mono) (if (check-variables mono)
+        (sum-similar-monomial (append (list (list 'm (+ c1 c2) td (list variables))) (rest (rest mono)))) (append (list (first mono)) (sum-similar-monomial (rest mono)))))))
 
 
 
