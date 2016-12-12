@@ -144,16 +144,16 @@ Checks:
 
 ;;; Parses an expression (expt VAR EXP) into the form (v EXP VAR)
 (defun parse-power (expr)
-  (if (is-power-not-parsed expr) 
+  (if (is-power-not-parsed expr)
       (list 'm 1 (third expr) (list 'v (third expr) (second expr))) nil))
 
 (defun parse-power-negative-coeff (expr)
-  (if (is-power-not-parsed expr) 
+  (if (is-power-not-parsed expr)
       (list 'm -1 (third expr) (list 'v (third expr) (second expr))) nil))
 
 ;;; True if expr is + or - or * or /
 (defun is-operator (expr)
-  (if (or (eql expr '*) (eql expr '/) (eql expr '-) (eql expr '+)) 
+  (if (or (eql expr '*) (eql expr '/) (eql expr '-) (eql expr '+))
       T NIL))
 
 ;;; Sorts the variables in a monomial by lexicographical order
@@ -180,17 +180,17 @@ Checks:
 
 ;;; Evaluates the coefficient of a monomial
 (defun build-coefficient (expr)
-  (if (null expr) 1 
-    (if (eval-as-number (first expr)) 
+  (if (null expr) 1
+    (if (eval-as-number (first expr))
         (* 1 (eval (first expr)) (build-coefficient (rest expr)))
-      (* 1 (build-coefficient (rest expr)))))) 
+      (* 1 (build-coefficient (rest expr))))))
 
 ;;; Builds the VPs of a monomial
 (defun build-varpowers (expr td)
   (let ((head (first expr)) (tail (rest expr)))
     (cond ((and (listp head) (not (null head)) (equal (first head) 'expt))
            (append (build-varpowers tail (+ (eval td) (eval (third head)))) (list (list 'v (third head) (second head)))))
-          ((and (symbolp head) (not (null head))) 
+          ((and (symbolp head) (not (null head)))
            (append (build-varpowers tail (+ 1 (eval td))) (list (list 'v 1 head)) ))
           ((numberp (eval head)) (build-varpowers tail td))
           ((null head) (list td)))))
@@ -207,17 +207,17 @@ Checks:
         (t (let ((head (first expr)) (tail (rest expr)))
              (if (is-operator head) ;;caso serio
                  (cond ((equal head '-)
-                        (if (listp (second expr)) 
+                        (if (listp (second expr))
                             (parse-power-negative-coeff (second expr)) (list 'm -1 1 (list 'v 1(second expr)))))
                        ((equal head '*)
                         (if (eql (build-coefficient tail) 0) (list 'm 0 0 nil)
                           (let ((vps (build-varpowers tail 0)))
-                            (append (list 'm) (list (build-coefficient tail)) (list (first vps)) (list (rest vps)))))))    
+                            (append (list 'm) (list (build-coefficient tail)) (list (first vps)) (list (rest vps)))))))
                (if (is-power-not-parsed head) (parse-power head) (list 'm 1 1 (list 'v 1 head))))))))
 
 ;;; Parses a polynomial
 (defun as-polynomial (expr)
-  (when (not (null expr)) 
+  (when (not (null expr))
     (let ((head (first expr)) (tail (rest expr)))
       (if (is-operator head) (if (equal head '+) (append (list 'poly)(list (as-polynomial tail))))
 	  (if (and (listp expr) (not (null tail))) (append (list (as-monomial head) (as-polynomial tail))) (list (as-monomial head)))))))
@@ -234,7 +234,18 @@ Checks:
     (if (equal (rest mono) nil) (append mono) (if (check-variables mono)
         (sum-similar-monomial (append (list (list 'm (+ c1 c2) td (list variables))) (rest (rest mono)))) (append (list (first mono)) (sum-similar-monomial (rest mono)))))))
 
+;; This predicate sums the exponents of similiar VPs in a monomial
+(defun compress-vars-in-monomial (mono)
+  (let ((vps (varpowers mono))(c (monomial-coefficient mono))(td (monomial-degree mono)))
+    (append (list 'm c td) (compress-vps vps))))
 
+;; This predicate sums the exponents of of similiar VPs
+(defun compress-vps (vps)
+  (let ((vp2 (second vps)) (expt1 (varpower-power (first vps))) (expt2 (varpower-power (second vps))) (var1 (varpower-symbol (first vps))) (var2 (varpower-symbol (second vps)))(tail (rest(rest vps))))
+    (if (not(null tail))
+        (if (not(null (listp vp2)))
+            (if (equal var1 var2) (compress-vps (append (list(list 'v (+ (eval expt1) (eval expt2)) var1)) tail)) (append (list (list 'v expt1 var1)) (compress-vps (rest vps)))))
+          (if (equal var1 var2) (list 'v (+ (eval expt1) (eval expt2)) var1) (append (list (list 'v expt1 var1)) (list (list 'v expt2 var2)))))))
 
 #|
 ;;; Checks whether the list contains only numbers and lists (recursively)
