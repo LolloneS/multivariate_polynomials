@@ -1,4 +1,3 @@
-
 ;;;; Mode: -*- Lisp -*-
 
 
@@ -96,10 +95,10 @@ Checks:
 
 ;;; Returns the list of all the variables in a poly
 (defun variables (p)
-  (mapcar #'varpower-symbol
-	  (apply #'append
-		 (mapcar #'varpowers
-			 (poly-monomials p)))))
+  (remove-duplicates (mapcar #'varpower-symbol
+                             (apply #'append
+                                    (mapcar #'varpowers
+                                            (poly-monomials p))))))
 
 ;;; Returns the max degree in the poly
 (defun maxdegree (p)
@@ -132,31 +131,37 @@ Checks:
 	  (minimum-in-list (cdr l)))))
 
 ;;; If (eval expression) is a number, returns it. Else NIL
-(defun eval-as-number(expression)
+(defun eval-as-number (expression)
   (let ((result (handler-case (eval expression)
 		  (error () nil)
 		  (warning () nil))))
     (if (numberp result) result nil)))
 
 ;;; True if expr is an expression to be parsed
-(defun is-power-not-parsed(expr)
+(defun is-power-not-parsed (expr)
   (if (not (listp expr)) nil
     (if (and (equal (first expr) 'expt) (symbolp (second expr)) (numberp (third expr))) T NIL)))
 
 ;;; Parses an expression (expt VAR EXP) into the form (v EXP VAR)
-(defun parse-power(expr)
+(defun parse-power (expr)
   (if (is-power-not-parsed expr) 
       (list 'm 1 (third expr) (list 'v (third expr) (second expr))) nil))
 
-(defun parse-power-negative-coeff(expr)
+(defun parse-power-negative-coeff (expr)
   (if (is-power-not-parsed expr) 
       (list 'm -1 (third expr) (list 'v (third expr) (second expr))) nil))
 
 ;;; True if expr is + or - or * or /
-(defun is-operator(expr)
+(defun is-operator (expr)
   (if (or (eql expr '*) (eql expr '/) (eql expr '-) (eql expr '+)) 
       T NIL))
 
+;;; Sorts the variables in a monomial by lexicographical order
+(defun sort-monomial (mono)
+  (let ((new-varpowers (copy-list (varpowers mono))))
+    (stable-sort new-varpowers 'string< :key 'third)))
+
+;;; Compares the degrees of the monomials in a poly
 (defun compare-degrees (first-mono rest-monos)
   (when (not (null first-mono))
     (let ((degrees (list (monomial-degree first-mono) (monomial-degree rest-monos))))
@@ -165,62 +170,62 @@ Checks:
             ((= (first degrees) (second degrees)) t)
             (t (< (first degrees) (second degrees)))))))
 
+;;; Sorts a polynomial by degree and lexicographical order
 (defun sort-poly (poly)
   (let ((poly-copied (copy-list poly)))
     (stable-sort poly-copied #'compare-degrees)
-    ;(compare-variables poly-copied)
+    ;(compare-variables poly-copied) DA FIXARE
 ))
 
 
 ;;; Evaluates the coefficient of a monomial
-(defun build-coefficient(expr)
+(defun build-coefficient (expr)
   (if (null expr) 1 
     (if (eval-as-number (first expr)) 
         (* 1 (eval (first expr)) (build-coefficient (rest expr)))
       (* 1 (build-coefficient (rest expr)))))) 
 
 ;;; Builds the VPs of a monomial
-(defun build-varpowers(expr td)
+(defun build-varpowers (expr td)
   (let ((head (first expr)) (tail (rest expr)))
     (cond ((and (listp head) (not (null head)) (equal (first head) 'expt))
            (append (build-varpowers tail (+ (eval td) (eval (third head)))) (list (list 'v (third head) (second head)))))
           ((and (symbolp head) (not (null head))) 
            (append (build-varpowers tail (+ 1 (eval td))) (list (list 'v 1 head)) ))
           ((numberp (eval head)) (build-varpowers tail td))
-          ((null head) (list td))
-          )))
+          ((null head) (list td)))))
 
 ;;; Parses a monomial
-(defun as-monomial(expr)
-  (if (eval-as-number expr)
-      ;; se e' solo un numero, calcola il coefficiente e ritorna il monomio
-      (list 'm (eval expr) 0 nil)
-      (let ((head (first expr)) (tail (rest expr)))
-	(if (is-operator head) ;;caso serio
-	    (cond ((equal head '-)
-		   (if (listp (second expr)) 
-		       (parse-power-negative-coeff (second expr)) (list 'm -1 1 (list 'v 1(second expr)))))
-		  ((equal head '*)
-		   (if (eql (build-coefficient tail) 0) (list 'm 0 0 nil)
-                     (let ((vps (build-varpowers tail 0)))
-                        (append (list 'm) (list (build-coefficient tail)) (list (first vps)) (list (rest vps)))))))
-          (if (is-power-not-parsed head) (parse-power head) (list 'm 1 1 (list 'v 1 head)))))))
+;; NB: per il concetto di atomo in CL, (as-monomial '-x) prende -x come simbolo di variabile
+(defun as-monomial (expr)
+  (cond ((eval-as-number expr) (list 'm (eval expr) 0 nil))
+        ((atom expr) (list 'm 1 1 (list 'v 1 expr)))
+        (t (let ((head (first expr)) (tail (rest expr)))
+             (if (is-operator head) ;;caso serio
+                 (cond ((equal head '-)
+                        (if (listp (second expr)) 
+                            (parse-power-negative-coeff (second expr)) (list 'm -1 1 (list 'v 1(second expr)))))
+                       ((equal head '*)
+                        (if (eql (build-coefficient tail) 0) (list 'm 0 0 nil)
+                          (let ((vps (build-varpowers tail 0)))
+                            (append (list 'm) (list (build-coefficient tail)) (list (first vps)) (list (rest vps)))))))    
+               (if (is-power-not-parsed head) (parse-power head) (list 'm 1 1 (list 'v 1 head))))))))
 
 ;;; Parses a polynomial
-(defun as-polynomial(expr)
+(defun as-polynomial (expr)
   (when (not (null expr)) 
     (let ((head (first expr)) (tail (rest expr)))
       (if (is-operator head) (if (equal head '+) (append (list 'poly)(list (as-polynomial tail))))
 	  (if (and (listp expr) (not (null tail))) (append (list (as-monomial head) (as-polynomial tail))) (list (as-monomial head)))))))
 
 ;; This predicate checks if the variables in the monomial are equal
-(defun check-variables(expr)
+(defun check-variables (expr)
   (let ((variables1 (fourth (first expr))) (variables2 (fourth (second expr))))
     (if (equal variables1 variables2) T NIL))
     )
 
 ;; This predicate sums the similar monomials in a polynomial
-(defun sum-similar-monomial(mono)
+(defun sum-similar-monomial (mono)
   (let ((c1 (second (first mono))) (c2 (second (second mono))) (td (third (first mono))) (variables (fourth (first mono))))
     (if (equal (rest mono) nil) (append mono) (if (check-variables mono)
         (sum-similar-monomial (append (list (list 'm (+ c1 c2) td (list variables))) (rest (rest mono)))) (append (list (first mono)) (sum-similar-monomial (rest mono)))))))
