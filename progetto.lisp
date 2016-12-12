@@ -159,7 +159,7 @@ Checks:
 ;;; Sorts the variables in a monomial by lexicographical order
 (defun sort-monomial (mono)
   (let ((new-varpowers (copy-list (varpowers mono))))
-    (stable-sort new-varpowers 'string< :key 'third)))
+    (append (list (first mono) (second mono) (third mono)) (list (stable-sort new-varpowers 'string< :key 'third)))))
 
 ;;; Compares the degrees of the monomials in a poly
 (defun compare-degrees (first-mono rest-monos)
