@@ -197,7 +197,11 @@ Checks:
 
 ;;; Parses a monomial
 ;; NB: per il concetto di atomo in CL, (as-monomial '-x) prende -x come simbolo di variabile
+
 (defun as-monomial (expr)
+  (sort-monomial (as-monomial-unordered expr)))
+
+(defun as-monomial-unordered (expr)
   (cond ((eval-as-number expr) (list 'm (eval expr) 0 nil))
         ((atom expr) (list 'm 1 1 (list 'v 1 expr)))
         (t (let ((head (first expr)) (tail (rest expr)))
