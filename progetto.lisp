@@ -247,6 +247,12 @@ Checks:
             (if (equal var1 var2) (compress-vps (append (list(list 'v (+ (eval expt1) (eval expt2)) var1)) tail)) (append (list (list 'v expt1 var1)) (compress-vps (rest vps)))))
           (if (equal var1 var2) (list 'v (+ (eval expt1) (eval expt2)) var1) (append (list (list 'v expt1 var1)) (list (list 'v expt2 var2)))))))
 
+
+;; This predicate change the sign of the coefficients
+(defun change-sign(mono)
+  (let ((c1 (second (first mono))) (td (third (first mono))) (var-powers (fourth(first mono))))
+    (if (equal (rest mono) nil)
+        (append (list (list 'm (- 0 c1) td (list var-powers)))) (append (list (list 'm (- 0 c1) td (list var-powers ))) (change-sign (rest mono))))))
 #|
 ;;; Checks whether the list contains only numbers and lists (recursively)
 (defun check-only-numbers-lists-in-list (expr)
