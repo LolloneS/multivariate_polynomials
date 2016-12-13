@@ -476,17 +476,21 @@ polyplus_call(poly(M1), poly(M2), poly(Z)) :-
     sort_monomials_in_polynomial(poly(Z1), poly(Z2)),
     sum_similar_monomials_in_poly(poly(Z2), poly(Z)).
 
+
 %%% polyminus/3
-% TRUE if Result is the difference between Poly1 and Poly2
+%%% TRUE if Result is the difference between Poly1 and Poly2
+
 polyminus(Poly1, Poly2, Result):-
     to_polynomial(Poly1, Poly1Parsed),
     to_polynomial(Poly2, Poly2Parsed),
     opposite_polynomial(Poly2Parsed, OppPoly2Parsed),
     polyminus_call(Poly1Parsed, OppPoly2Parsed, Result).
 
+
 %%% polyminus_call/3
 % TRUE if the third arg is the difference between the first and the
 % second polynomial
+
 polyminus_call(poly([]), poly([]), poly([])) :- !.
 polyminus_call(poly([]), poly(Monos), poly(SortedMonos)) :-
     sort_monomials_in_polynomial(poly(Monos), poly(SortedMonos)), !.
