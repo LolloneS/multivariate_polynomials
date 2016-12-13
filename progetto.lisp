@@ -161,20 +161,30 @@ Checks:
   (let ((new-varpowers (copy-list (varpowers mono))))
     (append (list (first mono) (second mono) (third mono)) (list (stable-sort new-varpowers 'string< :key 'third)))))
 
+;;; Compares the variables in monomials with the same TD
+(defun compare-varpowers (vars1 vars2)
+  (cond ((null vars1) (not (null vars2)))
+	((null vars2) nil)
+	((string< (third (first vars1)) (third (first vars2))) t)
+	((string> (third (first vars1)) (third (first vars2))) nil)
+        ((and (equal (third (first vars1)) (third (first vars2))) (= (second (first vars1)) (second (first vars2)))) (compare-varpowers (rest vars1) (rest vars2)))
+	(t (< (second (first vars1)) (second (first vars2))))))
+	
+
+
 ;;; Compares the degrees of the monomials in a poly
 (defun compare-degrees (first-mono rest-monos)
   (when (not (null first-mono))
     (let ((degrees (list (monomial-degree first-mono) (monomial-degree rest-monos))))
       (cond ((null first-mono) (not (null rest-monos)))
             ((null rest-monos) nil)
-            ((= (first degrees) (second degrees)) t)
+            ((= (first degrees) (second degrees)) (compare-varpowers (varpowers first-mono) (varpowers rest-monos)))
             (t (< (first degrees) (second degrees)))))))
 
 ;;; Sorts a polynomial by degree and lexicographical order
 (defun sort-poly (poly)
   (let ((poly-copied (copy-list poly)))
     (stable-sort poly-copied #'compare-degrees)
-    ;(compare-variables poly-copied) DA FIXARE
 ))
 
 
@@ -199,7 +209,7 @@ Checks:
 ;; NB: per il concetto di atomo in CL, (as-monomial '-x) prende -x come simbolo di variabile
 
 (defun as-monomial (expr)
-  (sort-monomial (as-monomial-unordered expr)))
+  (compress-vars-in-monomial (sort-monomial (as-monomial-unordered expr))))
 
 (defun as-monomial-unordered (expr)
   (cond ((eval-as-number expr) (list 'm (eval expr) 0 nil))
@@ -215,12 +225,16 @@ Checks:
                             (append (list 'm) (list (build-coefficient tail)) (list (first vps)) (list (rest vps)))))))
                (if (is-power-not-parsed head) (parse-power head) (list 'm 1 1 (list 'v 1 head))))))))
 
-;;; Parses a polynomial
+
 (defun as-polynomial (expr)
+  (append (list 'poly) (list (sort-poly (as-polynomial-call expr)))))
+
+;;; Parses a polynomial
+(defun as-polynomial-call (expr)
   (when (not (null expr))
     (let ((head (first expr)) (tail (rest expr)))
-      (if (is-operator head) (if (equal head '+) (append (list 'poly)(list (as-polynomial tail))))
-	  (if (and (listp expr) (not (null tail))) (append (list (as-monomial head) (as-polynomial tail))) (list (as-monomial head)))))))
+      (if (is-operator head) (when (equal head '+) (as-polynomial-call tail))
+	  (if (and (listp expr) (not (null tail))) (append (list (as-monomial head)) (as-polynomial-call tail)) (list (as-monomial head)))))))
 
 ;; This predicate checks if the variables in the monomial are equal
 (defun check-variables (expr)
@@ -236,16 +250,17 @@ Checks:
 
 ;; This predicate sums the exponents of similiar VPs in a monomial
 (defun compress-vars-in-monomial (mono)
-  (let ((vps (varpowers mono))(c (monomial-coefficient mono))(td (monomial-degree mono)))
-    (append (list 'm c td) (compress-vps vps))))
+  (let ((vps (varpowers mono)) (c (monomial-coefficient mono)) (td (monomial-degree mono)))
+    (append (list 'm c td) (list (compress-vps vps)))))
 
 ;; This predicate sums the exponents of of similiar VPs
 (defun compress-vps (vps)
-  (let ((vp2 (second vps)) (expt1 (varpower-power (first vps))) (expt2 (varpower-power (second vps))) (var1 (varpower-symbol (first vps))) (var2 (varpower-symbol (second vps)))(tail (rest(rest vps))))
-    (if (not(null tail))
-        (if (not(null (listp vp2)))
-            (if (equal var1 var2) (compress-vps (append (list(list 'v (+ (eval expt1) (eval expt2)) var1)) tail)) (append (list (list 'v expt1 var1)) (compress-vps (rest vps)))))
-          (if (equal var1 var2) (list 'v (+ (eval expt1) (eval expt2)) var1) (append (list (list 'v expt1 var1)) (list (list 'v expt2 var2)))))))
+  (unless (null vps)
+    (let ((vp2 (second vps)) (expt1 (varpower-power (first vps))) (expt2 (varpower-power (second vps))) (var1 (varpower-symbol (first vps))) (var2 (varpower-symbol (second vps))) (tail (rest(rest vps))))
+      (if (not (null tail))
+          (if (not (null vp2))
+              (if (equal var1 var2) (compress-vps (append (list (list 'v (+ (eval expt1) (eval expt2)) var1)) tail)) (append (list (list 'v expt1 var1)) (compress-vps (rest vps)))))
+        (if (equal var1 var2) (list (list 'v (+ (eval expt1) (eval expt2)) var1)) (append (list (list 'v expt1 var1)) (list (list 'v expt2 var2))))))))
 
 
 ;; This predicate changes the sign of the coefficients
@@ -271,13 +286,14 @@ Checks:
       )))
 
 (defun pprint-polynomial-call-variables (var-power)
-  (let ((exp (second (first var-power))) (var (third (first var-power))))
-    (if (equal (rest var-power) nil)
-        (if (= exp 1)
-            (append (list var)) (append (list var '^ exp)))
-      (if (= exp 1) 
-          (append (list var) (list '*) (pprint-polynomial-call-variables (rest var-power))) 
-        (append (list var '^ exp) (list '*) (pprint-polynomial-call-variables (rest var-power)))))))
+  (if (null var-power) nil
+    (let ((exp (second (first var-power))) (var (third (first var-power))))
+      (if (equal (rest var-power) nil)
+          (if (= exp 1)
+              (append (list var)) (append (list var '^ exp)))
+        (if (= exp 1) 
+            (append (list var) (list '*) (pprint-polynomial-call-variables (rest var-power))) 
+          (append (list var '^ exp) (list '*) (pprint-polynomial-call-variables (rest var-power))))))))
 
 
 #|
