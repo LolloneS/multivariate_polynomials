@@ -353,8 +353,10 @@ as_polynomial_unordered(Mono, poly([ParsedMono])) :-
 % TRUE if ParsedPoly is the polynomial Poly parsed,
 % reduced and sorted by grade and lexicographical order.
 
-to_polynomial(Poly, Poly) :- is_polynomial(Poly), !.
+to_polynomial(Poly, ParsedPoly) :- is_polynomial(Poly), !,
+                                   sort_monomials_in_polynomial(Poly, ParsedPoly).
 to_polynomial(Poly, ParsedPoly) :- as_polynomial(Poly, ParsedPoly).
+
 
 %%% polyval/3
 % Evaluates a poly in a certain point in space.
