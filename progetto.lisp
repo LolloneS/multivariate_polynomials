@@ -248,11 +248,38 @@ Checks:
           (if (equal var1 var2) (list 'v (+ (eval expt1) (eval expt2)) var1) (append (list (list 'v expt1 var1)) (list (list 'v expt2 var2)))))))
 
 
-;; This predicate change the sign of the coefficients
+;; This predicate changes the sign of the coefficients
 (defun change-sign(mono)
   (let ((c1 (second (first mono))) (td (third (first mono))) (var-powers (fourth(first mono))))
     (if (equal (rest mono) nil)
         (append (list (list 'm (- 0 c1) td (list var-powers)))) (append (list (list 'm (- 0 c1) td (list var-powers ))) (change-sign (rest mono))))))
+
+;; This predicate takes a list of monomials from the object poly sorted them and call pprint-polynomial-call
+;; MANCA ORDINAMENTO
+(defun pprint-polynomial (poly) 
+;; MANCA TO-POLYNOMIAL
+  (pprint-polynomial-call (second poly)))
+ 
+;; This predicate prints a traditional form of poly
+(defun pprint-polynomial-call (mono)
+  (let ((c1 (second (first mono))) (v&p (fourth (first mono))) (c2 (second (second mono))))
+    (if (equal (rest mono) nil)
+        (append (list c1) (list '*) (pprint-polynomial-call-variables v&p))
+      (if (> c2 0)
+          (append (list c1) (list '*) (pprint-polynomial-call-variables v&p) (list '+) (pprint-polynomial-call (rest mono)))
+        (append (list c1) (list '*) (pprint-polynomial-call-variables v&p) (pprint-polynomial-call (rest mono))))
+      )))
+
+(defun pprint-polynomial-call-variables (var-power)
+  (let ((exp (second (first var-power))) (var (third (first var-power))))
+    (if (equal (rest var-power) nil)
+        (if (= exp 1)
+            (append (list var)) (append (list var '^ exp)))
+      (if (= exp 1) 
+          (append (list var) (list '*) (pprint-polynomial-call-variables (rest var-power))) 
+        (append (list var '^ exp) (list '*) (pprint-polynomial-call-variables (rest var-power)))))))
+
+
 #|
 ;;; Checks whether the list contains only numbers and lists (recursively)
 (defun check-only-numbers-lists-in-list (expr)
