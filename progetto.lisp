@@ -69,8 +69,7 @@ Checks:
 
 ;;; Returns the list of all the monomials in a poly
 (defun poly-monomials (p)
-  (rest p)
-  )
+  (first (rest p)))
 
 ;;; T if p is a polynomial
 (defun is-polynomial (p)
@@ -182,10 +181,9 @@ Checks:
             (t (< (first degrees) (second degrees)))))))
 
 ;;; Sorts a polynomial by degree and lexicographical order
-(defun sort-poly (poly)
-  (let ((poly-copied (copy-list poly)))
-    (stable-sort poly-copied #'compare-degrees)
-))
+(defun sort-poly (monos)
+  (let ((poly-copied (copy-list monos)))
+    (stable-sort poly-copied #'compare-degrees)))
 
 
 ;;; Evaluates the coefficient of a monomial
@@ -213,7 +211,7 @@ Checks:
 
 (defun as-monomial-unordered (expr)
   (cond ((eval-as-number expr) (list 'm (eval expr) 0 nil))
-        ((atom expr) (list 'm 1 1 (list 'v 1 expr)))
+        ((atom expr) (list 'm 1 1 (list (list 'v 1 expr))))
         (t (let ((head (first expr)) (tail (rest expr)))
              (if (is-operator head) ;;caso serio
                  (cond ((equal head '-)
@@ -227,7 +225,7 @@ Checks:
 
 
 (defun as-polynomial (expr)
-  (append (list 'poly) (list (sort-poly (as-polynomial-call expr)))))
+  (append (list 'poly) (list (sum-similar-monos-in-poly (sort-poly (as-polynomial-call expr))))))
 
 ;;; Parses a polynomial
 (defun as-polynomial-call (expr)
@@ -237,37 +235,46 @@ Checks:
 	  (if (and (listp expr) (not (null tail))) (append (list (as-monomial head)) (as-polynomial-call tail)) (list (as-monomial head)))))))
 
 ;; This predicate checks if the variables in the monomial are equal
-(defun check-variables (expr)
+(defun check-equal-variables (expr)
   (let ((variables1 (fourth (first expr))) (variables2 (fourth (second expr))))
-    (if (equal variables1 variables2) T NIL))
-    )
+    (if (equal variables1 variables2) T NIL)))
 
 ;; This predicate sums the similar monomials in a polynomial
-(defun sum-similar-monomial (mono)
-  (let ((c1 (second (first mono))) (c2 (second (second mono))) (td (third (first mono))) (variables (fourth (first mono))))
-    (if (equal (rest mono) nil) (append mono) (if (check-variables mono)
-        (sum-similar-monomial (append (list (list 'm (+ c1 c2) td (list variables))) (rest (rest mono)))) (append (list (first mono)) (sum-similar-monomial (rest mono)))))))
+(defun sum-similar-monos-in-poly (monos)
+  (cond ((null monos) nil)
+        ((null (second monos)) monos)
+        (t 
+         (let* ((mono1 (first monos)) (mono2 (second monos)) (c1 (monomial-coefficient mono1)) (c2 (monomial-coefficient mono2)) (td (monomial-degree mono1)) (vps1 (varpowers mono1)) (vps2 (varpowers mono2)))
+           (if (not (equal vps1 vps2)) (append (list mono1) (sum-similar-monos-in-poly (rest monos))) 
+             (sum-similar-monos-in-poly (append (list (list 'm (+ c1 c2) td vps1)) (rest (rest monos)))))))))
+
 
 ;; This predicate sums the exponents of similiar VPs in a monomial
 (defun compress-vars-in-monomial (mono)
-  (let ((vps (varpowers mono)) (c (monomial-coefficient mono)) (td (monomial-degree mono)))
-    (append (list 'm c td) (list (compress-vps vps)))))
+  (if (null (varpowers mono)) mono
+    (let ((vps (varpowers mono)) (c (monomial-coefficient mono)) (td (monomial-degree mono)))
+      (append (list 'm c td) (list (compress-vps vps))))))
 
 ;; This predicate sums the exponents of of similiar VPs
 (defun compress-vps (vps)
-  (unless (null vps)
-    (let ((vp2 (second vps)) (expt1 (varpower-power (first vps))) (expt2 (varpower-power (second vps))) (var1 (varpower-symbol (first vps))) (var2 (varpower-symbol (second vps))) (tail (rest(rest vps))))
-      (if (not (null tail))
-          (if (not (null vp2))
-              (if (equal var1 var2) (compress-vps (append (list (list 'v (+ (eval expt1) (eval expt2)) var1)) tail)) (append (list (list 'v expt1 var1)) (compress-vps (rest vps)))))
-        (if (equal var1 var2) (list (list 'v (+ (eval expt1) (eval expt2)) var1)) (append (list (list 'v expt1 var1)) (list (list 'v expt2 var2))))))))
+  (if (null vps) nil
+    (if (null (second vps)) vps
+      (let ((vp2 (second vps)) (expt1 (varpower-power (first vps))) (expt2 (varpower-power (second vps))) (var1 (varpower-symbol (first vps))) (var2 (varpower-symbol (second vps))) (tail (rest(rest vps))))
+        (if (not (null tail))
+            (if (not (null vp2))
+                (if (equal var1 var2) (compress-vps (append (list (list 'v (+ (eval expt1) (eval expt2)) var1)) tail)) (append (list (list 'v expt1 var1)) (compress-vps (rest vps)))))
+          (if (equal var1 var2) (list (list 'v (+ (eval expt1) (eval expt2)) var1)) (append (list (list 'v expt1 var1)) (list (list 'v expt2 var2)))))))))
 
 
 ;; This predicate changes the sign of the coefficients
-(defun change-sign(mono)
+(defun change-sign (mono)
   (let ((c1 (second (first mono))) (td (third (first mono))) (var-powers (fourth(first mono))))
     (if (equal (rest mono) nil)
         (append (list (list 'm (- 0 c1) td (list var-powers)))) (append (list (list 'm (- 0 c1) td (list var-powers ))) (change-sign (rest mono))))))
+
+(defun polyplus (poly1 poly2)
+  ;controlli da aggiungere
+  (append (list 'poly) (sort-poly (sum-similar-monos-in-poly (sort-poly (append (poly-monomials poly1) (poly-monomials poly2)))))))
 
 ;; This predicate takes a list of monomials from the object poly sorted them and call pprint-polynomial-call
 (defun pprint-polynomial (poly) 
@@ -301,33 +308,5 @@ Checks:
         (if (= exp 1) 
             (append (list var) (list '*) (pprint-polynomial-call-variables (rest var-power))) 
           (append (list var '^ exp) (list '*) (pprint-polynomial-call-variables (rest var-power))))))))
-
-
-#|
-;;; Checks whether the list contains only numbers and lists (recursively)
-(defun check-only-numbers-lists-in-list (expr)
-  (let ((head (first expr)) (tail (rest expr)))
-    (cond ((null expr) t)
-	  ((numberp head) (check-only-numbers-lists-in-list tail))
-	  ((listp head) (and (check-expression-contains-no-variables head) (check-expression-contains-no-variables tail)))
-	  (t (error "C'e' un problema con l'input...")))))
-
-
-;;; Checks whether the expression contains variables
-;;; in case it begins with /
-(defun check-expression-contains-no-variables (expr)
-  (let ((head (first expr)) (tail (rest expr)))
-    (cond ((null expr) t)
-	  ((listp head) (and (check-expression-contains-no-variables head) (check-expression-contains-no-variables tail)))
-	  ((numberp head) (error "La struttura non e' corretta"))
-					; se il primo della lista e' un operatore aritmetico, controllo che il resto della lista sia fatto di numeri e liste
-	  ((numberp (position head '(+ - * /))) (check-only-numbers-lists-in-list tail))
-	  (t (error "Ci sono variabili in una posizione sbagliata!"))
-	  )))
-
-|#
-
-
-
 
 ;;; end of file -- progetto.lisp
