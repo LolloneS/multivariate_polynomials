@@ -184,7 +184,6 @@ Checks:
             (t (< (second (first vars1)) (second (first vars2)))))))))
 
 
-
 ;;; Compares the degrees of the monomials in a poly
 (defun compare-degrees (first-mono rest-monos)
   (when (not (null first-mono))
@@ -351,20 +350,23 @@ Checks:
                     (sort-poly (append (poly-monomials p1)
                                        (poly-monomials p2)))))))))
 
-;; This predicate takes a list of monomials from the object poly sorted them and call pprint-polynomial-call
+;; This predicate prints a polynomial in our "traditional" form
 (defun pprint-polynomial (poly) 
   (pprint-polynomial-call (second (to-polynomial poly))))
 
 ;; This predicate prints a traditional form of poly
 (defun pprint-polynomial-call (mono)
   (let ((m1 (first mono)) (c2 (second (second mono))))
-    (if (not (equal c2 nil))
+    (if (not (null c2))
         (if (> c2 0)
-            (append (pprint-polynomial-call-coefficients m1) (list '+) (pprint-polynomial-call (rest mono)))
-	    (append (pprint-polynomial-call-coefficients m1) (pprint-polynomial-call (rest mono))))
+            (append (pprint-polynomial-call-coefficients m1)
+		    (list '+)
+		    (pprint-polynomial-call (rest mono)))
+	    (append (pprint-polynomial-call-coefficients m1)
+		    (pprint-polynomial-call (rest mono))))
 	(append (pprint-polynomial-call-coefficients m1)))))
 
-;; This predicate prints coefficients
+;; This predicate prints the coefficient of a mono
 (defun pprint-polynomial-call-coefficients (m1)
   (let ((c1 (second m1)) (v&p (fourth m1)))
     (if (equal v&p nil)
@@ -372,7 +374,7 @@ Checks:
 	(append (list c1) (list '*) (pprint-polynomial-call-variables v&p)))))
 
 
-;; This predicate prints variables and powers
+;; This predicate prints variables and powers of a mono
 (defun pprint-polynomial-call-variables (var-power)
   (if (null var-power) nil
       (let ((exp (second (first var-power))) (var (third (first var-power))))
@@ -380,7 +382,10 @@ Checks:
 	    (if (= exp 1)
 		(append (list var)) (append (list var '^ exp)))
 	    (if (= exp 1) 
-		(append (list var) (list '*) (pprint-polynomial-call-variables (rest var-power))) 
-		(append (list var '^ exp) (list '*) (pprint-polynomial-call-variables (rest var-power))))))))
+		(append (list var '*)
+			(pprint-polynomial-call-variables (rest var-power)))
+		(append (list var '^ exp '*)
+			(pprint-polynomial-call-variables
+			 (rest var-power))))))))
 
 ;;; end of file -- progetto.lisp
