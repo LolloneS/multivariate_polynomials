@@ -71,8 +71,7 @@ Checks:
 
 ;;; Returns the list of all the monomials in a poly
 (defun poly-monomials (p)
-  (if (is-polynomial p) (first (rest p))
-    (error "Non è stato passato un polinomio")))
+ (first (rest p)))
 
 ;;; T if p is a polynomial
 (defun is-polynomial (p)
@@ -255,11 +254,13 @@ Checks:
 ;;; Parses a polynomial
 (defun as-polynomial-call (expr)
   (when (not (null expr))
-    (let ((head (first expr)) (tail (rest expr)))
-      (if (is-operator head) (when (equal head '+) (as-polynomial-call tail))
-	  (if (and (listp expr) (not (null tail)))
-	      (append (list (as-monomial head)) (as-polynomial-call tail))
-	      (list (as-monomial head)))))))
+    (if (atom expr) (as-monomial expr)
+      (let ((head (first expr)) (tail (rest expr)))
+        (if (is-operator head) 
+            (if (equal head '+) (as-polynomial-call tail) (list (as-monomial expr)))
+          (if (and (listp expr) (not (null tail)))
+              (append (list (as-monomial head)) (as-polynomial-call tail))
+            (list (as-monomial head))))))))
 
 ;; This predicate checks if the variables in the monomial are equal
 (defun check-equal-variables (expr)
@@ -335,10 +336,10 @@ Checks:
 
 
 (defun to-polynomial (poly)
-  (cond ((is-polynomial poly) (append (list 'poly) (sort-poly poly)))
+  (cond ((is-polynomial poly) (append (list 'poly) (sort-poly (poly-monomials poly))))
 	((is-monomial poly) (append (list 'poly) (list (list poly))))
 	(t 
-         (if (equal '* (first poly)) (to-polynomial (as-monomial poly))
+         (if (or (atom poly) (equal '* (first poly))) (to-polynomial (as-monomial poly))
            (as-polynomial poly)))))
 	
 
@@ -349,6 +350,15 @@ Checks:
                    (sum-similar-monos-in-poly
                     (sort-poly (append (poly-monomials p1)
                                        (poly-monomials p2)))))))))
+
+(defun polyminus (poly1 poly2)
+  (let ((p1 (to-polynomial poly1)) (p2 (to-polynomial poly2)))
+    (append (list 'poly)
+            (list (sort-poly
+                   (sum-similar-monos-in-poly
+                    (sort-poly (append (poly-monomials p1)
+                                       (change-sign 
+                                        (poly-monomials p2))))))))))
 
 ;; This predicate prints a polynomial in our "traditional" form
 (defun pprint-polynomial (poly) 
