@@ -322,6 +322,14 @@ Checks:
 		    (append (list (list 'v expt1 var1))
 			    (list (list 'v expt2 var2)))))))))
 
+;; Pairlis
+(defun new-pairlis (list1 list2)
+  (cond ((null list1) list2)
+	((null list2) list1)
+	(t (append (list (list (first list1) (first list2)))
+		   (new-pairlis (rest list1) (rest list2))))))
+
+
 
 ;; This predicate changes the sign of the coefficients
 (defun change-sign (monos)
@@ -359,6 +367,23 @@ Checks:
                     (sort-poly (append (poly-monomials p1)
                                        (change-sign 
                                         (poly-monomials p2))))))))))
+
+#|
+(defun polytimes (poly1 poly2)
+  (if (or (null poly1) (null poly2)) nil
+      (multiply-monos (poly-monomials poly1)
+		      (poly-monomials poly2))))
+
+
+(defun multiply-monos (monos1 monos2)
+  (let* ((first-mono1 (first monos1))
+	 (first-mono2 (first monos2)))
+    ......))
+|#
+	
+	 
+
+
 
 ;; This predicate prints a polynomial in our "traditional" form
 (defun pprint-polynomial (poly) 
