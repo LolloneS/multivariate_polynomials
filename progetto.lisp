@@ -338,9 +338,8 @@ Checks:
 	 (td (third mono1))
 	 (var-powers (fourth mono1)))
     (if (equal (rest monos) nil)
-        (append (list (list 'm (- 0 c1) td (list var-powers))))
-	(append (list (list 'm (- 0 c1) td (list var-powers )))
-		(change-sign (rest monos))))))
+        (append (list (list 'm (- 0 c1) td var-powers)))
+      (change-sign (rest monos)))))
 
 
 (defun to-polynomial (poly)
