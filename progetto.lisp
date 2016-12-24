@@ -71,7 +71,7 @@ Checks:
 
 ;;; Returns the list of all the monomials in a poly
 (defun poly-monomials (p)
- (first (rest p)))
+  (first (rest p)))
 
 ;;; T if p is a polynomial
 (defun is-polynomial (p)
@@ -83,10 +83,10 @@ Checks:
 
 ;;; Returns the list of all the coefficients in a poly
 (defun coefficients (p)
-  (if (is-polynomial p) 
+  (if (is-polynomial p)
       (let ((monomials (poly-monomials p)))
-        (mapcar 'monomial-coefficient monomials)) 
-    (error "Non è stato passato un polinomio")))
+        (mapcar 'monomial-coefficient monomials))
+      (error "Non e' stato passato un polinomio")))
 
 
 ;;; Returns the list of all the VPs in a poly
@@ -103,7 +103,7 @@ Checks:
                                  (apply #'append
                                         (mapcar #'varpowers
                                                 (poly-monomials p)))))
-    (error "Non è stato passato un polinomio")))
+      (error "Non e' stato passato un polinomio")))
 
 ;;; Returns the max degree in the poly
 (defun maxdegree (p)
@@ -173,14 +173,14 @@ Checks:
 (defun compare-varpowers (vars1 vars2)
   (cond ((null vars1) (not (null vars2)))
 	((null vars2) nil)
-	(t 
+	(t
          (let ((v1 (first vars1)) (v2 (first vars2)))
            (cond
-            ((string< (third v1) (third v2)) t)
-            ((string> (third v1) (third v2)) nil)
-            ((and (equal (third v1) (third v2)) (= (second v1) (second v2)))
-             (compare-varpowers (rest vars1) (rest vars2)))
-            (t (< (second (first vars1)) (second (first vars2)))))))))
+	     ((string< (third v1) (third v2)) t)
+	     ((string> (third v1) (third v2)) nil)
+	     ((and (equal (third v1) (third v2)) (= (second v1) (second v2)))
+	      (compare-varpowers (rest vars1) (rest vars2)))
+	     (t (< (second (first vars1)) (second (first vars2)))))))))
 
 
 ;;; Compares the degrees of the monomials in a poly
@@ -245,33 +245,34 @@ Checks:
 		     (parse-power head)
 		     (list 'm 1 1 (list 'v 1 head))))))))
 
-
+;; Parses the input as a polynomial
 (defun as-polynomial (expr)
-  (append (list 'poly) (list
-			(sum-similar-monos-in-poly
-			 (sort-poly (as-polynomial-call expr))))))
+  (append (list 'poly) 
+          (list		
+           (sum-similar-monos-in-poly
+            (sort-poly (as-polynomial-call expr))))))
 
 ;;; Parses a polynomial
 (defun as-polynomial-call (expr)
   (when (not (null expr))
     (if (atom expr) (as-monomial expr)
-      (let ((head (first expr)) (tail (rest expr)))
-        (if (is-operator head) 
-            (if (equal head '+) (as-polynomial-call tail) (list (as-monomial expr)))
-          (if (and (listp expr) (not (null tail)))
-              (append (list (as-monomial head)) (as-polynomial-call tail))
-            (list (as-monomial head))))))))
+	(let ((head (first expr)) (tail (rest expr)))
+	  (if (is-operator head)
+	      (if (equal head '+) (as-polynomial-call tail) (list (as-monomial expr)))
+	      (if (and (listp expr) (not (null tail)))
+		  (append (list (as-monomial head)) (as-polynomial-call tail))
+		  (list (as-monomial head))))))))
 
-;; This predicate checks if the variables in the monomial are equal
+;; This function checks if the variables in the monomial are equal
 (defun check-equal-variables (expr)
   (let ((variables1 (fourth (first expr))) (variables2 (fourth (second expr))))
     (if (equal variables1 variables2) T NIL)))
 
-;; This predicate sums the similar monomials in a polynomial
+;; This function sums the similar monomials in a polynomial
 (defun sum-similar-monos-in-poly (monos)
   (cond ((null monos) nil)
         ((null (second monos)) monos)
-        (t 
+        (t
          (let* ((mono1 (first monos))
 		(mono2 (second monos))
 		(c1 (monomial-coefficient mono1))
@@ -281,7 +282,7 @@ Checks:
 		(vps2 (varpowers mono2)))
            (if (not (equal vps1 vps2))
 	       (append (list mono1)
-		       (sum-similar-monos-in-poly (rest monos))) 
+		       (sum-similar-monos-in-poly (rest monos)))
 	       (sum-similar-monos-in-poly
 		(append (list (list 'm (+ c1 c2) td vps1))
 			(rest (rest monos)))))))))
@@ -322,7 +323,7 @@ Checks:
 		    (append (list (list 'v expt1 var1))
 			    (list (list 'v expt2 var2)))))))))
 
-;; Pairlis
+;; This function creates a list with elements from list1 and list2 alternated
 (defun new-pairlis (list1 list2)
   (cond ((null list1) list2)
 	((null list2) list1)
@@ -339,16 +340,85 @@ Checks:
 	 (var-powers (fourth mono1)))
     (if (equal (rest monos) nil)
         (append (list (list 'm (- 0 c1) td var-powers)))
-      (change-sign (rest monos)))))
+	(change-sign (rest monos)))))
 
-
+;; Checks whether the input is a Poly. If not, the function parses the input
 (defun to-polynomial (poly)
-  (cond ((is-polynomial poly) (append (list 'poly) (sort-poly (poly-monomials poly))))
+  (cond ((is-polynomial poly) (append (list 'poly) (sort-poly (list (poly-monomials poly)))))
 	((is-monomial poly) (append (list 'poly) (list (list poly))))
-	(t 
-         (if (or (atom poly) (equal '* (first poly))) (to-polynomial (as-monomial poly))
-           (as-polynomial poly)))))
-	
+	((if (or (atom poly) (equal '* (first poly))) (to-polynomial (as-monomial poly))
+	     (as-polynomial poly)))
+        (t (error "Not a valid input! EXPECTED: [Poly] or [Monos]"))))
+
+;; Evaluates a poly in a certain point in space
+(defun polyval (poly value)
+  (if (listp value) 
+      (let* ((polyParsed (to-polynomial poly)) (vars (variables polyParsed))
+	     (alternate (new-pairlis vars value)) (monos (poly-monomials polyParsed)) 
+	     (monos-with-value (substitute-vars-in-mono monos alternate))) (evaluate-monos monos-with-value))
+      
+      (error "I valori non sono in una lista")))
+
+;; This predicate substitutes variable in a vp with a number
+;; (evaluation point of the poly)
+(defun substitute-var-in-vp (vp alternate)
+  (let* ((var (third vp))
+	 (var-a (first alternate))
+	 (value (second alternate)) 
+	 (tail (rest (rest alternate)))
+	 (expt (second vp)))
+    (if (and (null var) (null expt))
+	(list 'v 0 0)
+	(if (eq var var-a)
+	    (list 'v expt value)
+	    (substitute-var-in-vp vp tail)))))
+
+(defun substitute-vars-in-vps (vps alternate)
+  (let* ((head (first vps)) (tail (rest vps)))
+    (if (not (null tail))
+	(append (list (substitute-var-in-vp head alternate))
+		(substitute-vars-in-vps tail alternate)) 
+	(list (substitute-var-in-vp head alternate)))))
+
+
+;; This predicate creates a new monomial by substituing the variables with
+;; the corresponding values appearing in the list "alternate"
+(defun substitute-vars-in-mono (monos alternate)
+  (let* ((head (first monos))
+	 (tail (rest monos))
+	 (vps (varpowers head))
+	 (coef (second head)) 
+         (td (third head))
+	 (vps-a (substitute-vars-in-vps vps alternate)))
+    (if (not (null tail))
+	(append (list (list 'm coef td vps-a)) (substitute-vars-in-mono tail alternate)) 
+	(list (list 'm coef td vps-a)))))
+
+
+;;; evaluate-monos/1, evaluate-vps/1
+;; They caluculate the value of the monomials that compose a polynomial
+;; in a certain point
+
+(defun evaluate-monos (monos)
+  (let* ((head (first monos))
+	 (tail (rest monos))
+	 (coef (second head))
+	 (vps (varpowers head))
+	 (vps-a (evaluate-vps vps)))
+    (if (not (null tail))
+	(+ (* coef vps-a) (evaluate-monos tail))
+	(* coef vps-a))))
+
+(defun evaluate-vps (vps)
+  (let* ((head (first vps))
+	 (tail (rest vps))
+	 (exp (second head))
+	 (base (third head)))
+    (if (not (null tail))
+	(* (expt base exp) (evaluate-vps tail))
+	(expt base exp))))
+
+
 
 (defun polyplus (poly1 poly2)
   (let ((p1 (to-polynomial poly1)) (p2 (to-polynomial poly2)))
@@ -364,28 +434,63 @@ Checks:
             (list (sort-poly
                    (sum-similar-monos-in-poly
                     (sort-poly (append (poly-monomials p1)
-                                       (change-sign 
+                                       (change-sign
                                         (poly-monomials p2))))))))))
 
-#|
+
 (defun polytimes (poly1 poly2)
-  (if (or (null poly1) (null poly2)) nil
-      (multiply-monos (poly-monomials poly1)
-		      (poly-monomials poly2))))
+  (append (list 'poly) 
+          (list (sort-poly (sum-similar-monos-in-poly 
+			    (polytimes-call
+			     (poly-monomials (to-polynomial poly1))
+			     (poly-monomials (to-polynomial poly2))))))))
 
 
-(defun multiply-monos (monos1 monos2)
-  (let* ((first-mono1 (first monos1))
-	 (first-mono2 (first monos2)))
-    ......))
-|#
-	
-	 
+(defun polytimes-call (monos1 monos2)
+  (if (or (null monos1) (null monos2)) nil
+      (let* ((head1 (first monos1)) 
+	     (head2 (first monos2)) 
+	     (tail1 (rest monos1))
+	     (tail2 (rest monos2)))
+	(append (list (mono-times head1 head2))
+		(polytimes-call (list head1) tail2)
+		(polytimes-call tail1 monos2)))))
 
+(defun mono-times (mono1 mono2)
+  (cond ((null mono1) mono2)
+        ((null mono2) mono1)
+        (t (let ((c1 (monomial-coefficient mono1))
+                 (c2 (monomial-coefficient mono2))
+                 (td1 (monomial-degree mono1))
+                 (td2 (monomial-degree mono2))
+                 (vps1 (varpowers mono1))
+                 (vps2 (varpowers mono2)))
+             (if (or (= 0 c1) (= 0 c2)) (list 'm 0 0 nil)
+		 (append (list 'm 
+			       (* c1 c2) 
+			       (+ td1 td2)
+			       (multiply-variables vps1 vps2))))))))
 
+(defun multiply-variables (vps1 vps2)
+  (cond ((null vps1) vps2)
+        ((null vps2) vps1)
+        (t (let* ((vp1 (first vps1))
+                  (vp2 (first vps2))
+                  (exp1 (varpower-power vp1))
+                  (exp2 (varpower-power vp2))
+                  (var1 (varpower-symbol vp1))
+                  (var2 (varpower-symbol vp2)))
+             (if (equal var1 var2) 
+                 (append (list (list 'v (+ exp1 exp2) var1)) 
+                         (multiply-variables (rest vps1) (rest vps2)))
+		 (if (string>= var1 var2) 
+		     (append (list (list 'v exp2 var2))
+			     (multiply-variables vps1 (rest vps2))) 
+		     (append (list (list 'v exp1 var1))
+			     (multiply-variables (rest vps1) vps2))))))))
 
 ;; This predicate prints a polynomial in our "traditional" form
-(defun pprint-polynomial (poly) 
+(defun pprint-polynomial (poly)
   (pprint-polynomial-call (second (to-polynomial poly))))
 
 ;; This predicate prints a traditional form of poly
@@ -415,7 +520,7 @@ Checks:
 	(if (equal (rest var-power) nil)
 	    (if (= exp 1)
 		(append (list var)) (append (list var '^ exp)))
-	    (if (= exp 1) 
+	    (if (= exp 1)
 		(append (list var '*)
 			(pprint-polynomial-call-variables (rest var-power)))
 		(append (list var '^ exp '*)
