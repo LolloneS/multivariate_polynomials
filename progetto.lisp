@@ -247,10 +247,11 @@ Checks:
 
 ;; Parses the input as a polynomial
 (defun as-polynomial (expr)
-  (append (list 'poly) 
-          (list		
-           (sum-similar-monos-in-poly
-            (sort-poly (as-polynomial-call expr))))))
+  (if (is-monomial expr) (to-polynomial expr)
+    (append (list 'poly)
+            (list
+             (sum-similar-monos-in-poly
+              (sort-poly (as-polynomial-call expr)))))))
 
 ;;; Parses a polynomial
 (defun as-polynomial-call (expr)
@@ -352,11 +353,11 @@ Checks:
 
 ;; Evaluates a poly in a certain point in space
 (defun polyval (poly value)
-  (if (listp value) 
+  (if (listp value)
       (let* ((polyParsed (to-polynomial poly)) (vars (variables polyParsed))
-	     (alternate (new-pairlis vars value)) (monos (poly-monomials polyParsed)) 
+	     (alternate (new-pairlis vars value)) (monos (poly-monomials polyParsed))
 	     (monos-with-value (substitute-vars-in-mono monos alternate))) (evaluate-monos monos-with-value))
-      
+
       (error "I valori non sono in una lista")))
 
 ;; This predicate substitutes variable in a vp with a number
@@ -364,7 +365,7 @@ Checks:
 (defun substitute-var-in-vp (vp alternate)
   (let* ((var (third vp))
 	 (var-a (first alternate))
-	 (value (second alternate)) 
+	 (value (second alternate))
 	 (tail (rest (rest alternate)))
 	 (expt (second vp)))
     (if (and (null var) (null expt))
@@ -377,7 +378,7 @@ Checks:
   (let* ((head (first vps)) (tail (rest vps)))
     (if (not (null tail))
 	(append (list (substitute-var-in-vp head alternate))
-		(substitute-vars-in-vps tail alternate)) 
+		(substitute-vars-in-vps tail alternate))
 	(list (substitute-var-in-vp head alternate)))))
 
 
@@ -387,11 +388,11 @@ Checks:
   (let* ((head (first monos))
 	 (tail (rest monos))
 	 (vps (varpowers head))
-	 (coef (second head)) 
+	 (coef (second head))
          (td (third head))
 	 (vps-a (substitute-vars-in-vps vps alternate)))
     (if (not (null tail))
-	(append (list (list 'm coef td vps-a)) (substitute-vars-in-mono tail alternate)) 
+	(append (list (list 'm coef td vps-a)) (substitute-vars-in-mono tail alternate))
 	(list (list 'm coef td vps-a)))))
 
 
@@ -439,8 +440,8 @@ Checks:
 
 
 (defun polytimes (poly1 poly2)
-  (append (list 'poly) 
-          (list (sort-poly (sum-similar-monos-in-poly 
+  (append (list 'poly)
+          (list (sort-poly (sum-similar-monos-in-poly
 			    (polytimes-call
 			     (poly-monomials (to-polynomial poly1))
 			     (poly-monomials (to-polynomial poly2))))))))
@@ -448,8 +449,8 @@ Checks:
 
 (defun polytimes-call (monos1 monos2)
   (if (or (null monos1) (null monos2)) nil
-      (let* ((head1 (first monos1)) 
-	     (head2 (first monos2)) 
+      (let* ((head1 (first monos1))
+	     (head2 (first monos2))
 	     (tail1 (rest monos1))
 	     (tail2 (rest monos2)))
 	(append (list (mono-times head1 head2))
@@ -466,8 +467,8 @@ Checks:
                  (vps1 (varpowers mono1))
                  (vps2 (varpowers mono2)))
              (if (or (= 0 c1) (= 0 c2)) (list 'm 0 0 nil)
-		 (append (list 'm 
-			       (* c1 c2) 
+		 (append (list 'm
+			       (* c1 c2)
 			       (+ td1 td2)
 			       (multiply-variables vps1 vps2))))))))
 
@@ -480,12 +481,12 @@ Checks:
                   (exp2 (varpower-power vp2))
                   (var1 (varpower-symbol vp1))
                   (var2 (varpower-symbol vp2)))
-             (if (equal var1 var2) 
-                 (append (list (list 'v (+ exp1 exp2) var1)) 
+             (if (equal var1 var2)
+                 (append (list (list 'v (+ exp1 exp2) var1))
                          (multiply-variables (rest vps1) (rest vps2)))
-		 (if (string>= var1 var2) 
+		 (if (string>= var1 var2)
 		     (append (list (list 'v exp2 var2))
-			     (multiply-variables vps1 (rest vps2))) 
+			     (multiply-variables vps1 (rest vps2)))
 		     (append (list (list 'v exp1 var1))
 			     (multiply-variables (rest vps1) vps2))))))))
 
