@@ -19,6 +19,9 @@ is_monomial(m(_C, TD, VPs)) :-
     foreach(member(V, VPs), is_varpower(V)),
     sum_degrees_variables(VPs, TD).
 
+is_monomial(poly([SingleMono])) :-
+    is_monomial(SingleMono).
+
 
 %%% is_varpower/1
 %%% TRUE if the argument is a VP
@@ -31,6 +34,9 @@ is_varpower(v(Power, VarSymbol)) :-
 
 %%% is_polynomial/1
 %%% TRUE if the argument is a list of Momomials
+
+is_polynomial(SingleMono) :-
+  is_monomial(SingleMono).
 
 is_polynomial(poly(Monomials)) :-
     is_list(Monomials),
