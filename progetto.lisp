@@ -331,10 +331,10 @@ Checks:
 
 (defun as-polynomial (expr)
   (if (is-monomial expr) (to-polynomial expr)
-    (append (list 'poly)
-            (list
-             (sum-similar-monos-in-poly
-              (sort-poly (as-polynomial-call expr)))))))
+      (append (list 'poly)
+	      (list
+	       (sum-similar-monos-in-poly
+		(sort-poly (as-polynomial-call expr)))))))
 
 
 ;;; as-polynomial-call/1
@@ -463,7 +463,8 @@ Checks:
   (if (listp value)
       (let* ((polyParsed (to-polynomial poly)) (vars (variables polyParsed))
 	     (alternate (new-pairlis vars value)) (monos (poly-monomials polyParsed))
-	     (monos-with-value (substitute-vars-in-mono monos alternate))) (evaluate-monos monos-with-value))
+	     (monos-with-value (substitute-vars-in-mono monos alternate)))
+	(evaluate-monos monos-with-value))
 
       (error "I valori non sono in una lista")))
 
