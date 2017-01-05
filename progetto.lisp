@@ -30,19 +30,25 @@
 ;; Returns the monomial's Vars and Powers
 
 (defun varpowers (mono)
-  (and (= (length mono) 4)
+  (if (and (= (length mono) 4) (eq 'm (first mono)))
        (let ((vps (fourth mono)))
-	 (if (listp vps)
-	     vps
-	     (error "le variabili non sono scritte correttamente")))))
+         (if (listp vps)
+             vps
+           (error "le variabili non sono scritte correttamente"))) 
+      (let* ((parsed-mono (as-monomial mono)) (vps (fourth parsed-mono)))
+         (if (listp vps)
+             vps
+           (error "le variabili non sono scritte correttamente"))))) 
 
 
 ;;; monomial-degree/1
 ;; Returns the monomial's TD
 
 (defun monomial-degree (mono)
-  (and (= (length mono) 4)
-       (let ((mtd (third mono)))
+  (if (and (= (length mono) 4) (eq 'm (first mono)))
+      (let ((mtd (third mono)))
+        (if (>= mtd 0) mtd (error "Grado minore di 0")))
+    (let* ((parsed-mono (as-monomial mono)) (mtd (third parsed-mono)))
          (if (>= mtd 0) mtd (error "Grado minore di 0")))))
 
 
@@ -50,8 +56,10 @@
 ;; Returns the monomial's coefficient
 
 (defun monomial-coefficient (mono)
-  (and (= (length mono) 4)
-       (let ((coeff (second mono)))
+  (if (and (= (length mono) 4) (eq 'm (first mono)))
+      (let ((coeff (second mono)))
+         (if (numberp coeff) coeff (error "Il coeff non e' un numero")))
+    (let* ((parsed-mono (as-monomial mono)) (coeff (second parsed-mono)))
          (if (numberp coeff) coeff (error "Il coeff non e' un numero")))))
 
 
@@ -113,31 +121,30 @@ Checks:
 ;; Returns the list of all the coefficients in a poly
 
 (defun coefficients (p)
-  (if (is-polynomial p)
-      (let ((monomials (poly-monomials p)))
-        (mapcar 'monomial-coefficient monomials))
-      (error "Non e' stato passato un polinomio")))
-
-
-;;; poly-variables/1
-;; Returns the list of all the VPs in a poly
-
-(defun poly-variables (p)
-  (apply #'append
-	 (let ((monomials (poly-monomials p)))
-	   (mapcar 'varpowers monomials))))
+  (let* ((parsed-p (to-polynomial p)) (monomials (poly-monomials parsed-p)))
+        (mapcar 'monomial-coefficient monomials)))
 
 
 ;;; variables/1
 ;; Returns the list of all the variables in a poly
 
 (defun variables (p)
-  (if (is-polynomial p)
+  (let ((parsed-p (to-polynomial p)))
       (remove-duplicates (mapcar #'varpower-symbol
                                  (apply #'append
                                         (mapcar #'varpowers
-                                                (poly-monomials p)))))
-      (error "Non e' stato passato un polinomio")))
+                                                (poly-monomials parsed-p)))))))
+
+
+;;; vars-of/1
+;;
+
+(defun vars-of (mono)
+  (if (not (and (equal (first mono) 'm) (= (length mono) 4)))
+      (vars-of (as-monomial mono))
+    (apply #'append
+           (let ((vps (varpowers mono)))
+             (append (list (mapcar (lambda (x) (third x)) vps)))))))
 
 
 ;;; maxdegree/1
@@ -207,7 +214,8 @@ Checks:
 
 (defun parse-power (expr)
   (if (is-power-not-parsed expr)
-      (list 'm 1 (third expr) (list 'v (third expr) (second expr))) nil))
+      (if (not (eq (third expr) 0)) (list 'm 1 (third expr) (list 'v (third expr) (second expr))) 
+        (list 'm 1 '0 nil)) nil))
 
 
 ;;; parse-power-negative-coeff/1 
@@ -289,9 +297,11 @@ Checks:
 
 (defun build-varpowers (expr td)
   (let ((head (first expr)) (tail (rest expr)))
-    (cond ((and (listp head) (not (null head)) (equal (first head) 'expt))
+    (cond ((and (listp head) (not (null head)) (not (eq (third head) 0)) (equal (first head) 'expt))
            (append (build-varpowers tail (+ (eval td) (eval (third head))))
 		   (list (list 'v (third head) (second head)))))
+          ((and (listp head) (not (null head)) (eq (third head) 0) (equal (first head) 'expt))
+           (append (build-varpowers tail (+ (eval td) (eval (third head)))) nil))
           ((and (symbolp head) (not (null head)))
            (append (build-varpowers tail (+ 1 (eval td)))
 		   (list (list 'v 1 head))))
