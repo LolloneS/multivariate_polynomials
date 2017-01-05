@@ -103,7 +103,8 @@ Checks:
 ;; Returns the list of all the monomials in a poly
 
 (defun poly-monomials (p)
-  (first (rest p)))
+  (let* ((parsed-p (to-polynomial p)))
+    (first (rest parsed-p))))
 
 
 ;;; is-polynomial/1
@@ -151,10 +152,9 @@ Checks:
 ;; Returns the max degree in the poly
 
 (defun maxdegree (p)
-  (if (is-polynomial p)
+  (let* ((parsed-p (to-polynomial p)))
       (maximum-in-list (mapcar #'monomial-degree
-			       (poly-monomials p)))
-      (error "P is not a polynomial")))
+			       (poly-monomials parsed-p)))))
 
 
 ;;; maximun-in-list/1
@@ -172,10 +172,9 @@ Checks:
 ;; Returns the min degree in the poly
 
 (defun mindegree (p)
-  (if (is-polynomial p)
+ (let ((parsed-p (to-polynomial p)))
       (minimum-in-list (mapcar #'monomial-degree
-			       (poly-monomials p)))
-      (error "P is not a polynomial")))
+			       (poly-monomials parsed-p)))))
 
 
 ;;; minimun-in-list/1
