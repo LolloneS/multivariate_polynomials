@@ -164,25 +164,20 @@ mindegree(Poly, Degree) :-
 
 maxdegree(poly([]), 0) :- !.
 maxdegree(Poly, Degree) :-
-    to_polynomial(Poly, PolyParsed), !,
-    get_variables_from_polynomial(PolyParsed, VPs),
-    get_powers_from_variables(VPs, FinalList),
-    maxInList(FinalList, Degree2), !,
+    to_polynomial(Poly, poly(Parsed)), !,
+    get_last_mono(Parsed, m(_, Degree2, _)), !,
     Degree2 >= 0,
     Degree is Degree2.
 
 
-%%% maxInList/2
-%%% Gets the maxiumum element in a list
+%%% get_last_mono/2
+%%% Gets the last monomial in a poly
 
-maxInList([], 0) :- !.
-maxInList([X], X) :- !.
-maxInList([X | Xs], M):-
-    maxInList(Xs, M),
-    M >= X.
-maxInList([X | Xs], X):-
-    maxInList(Xs, M),
-    X >= M.
+get_last_mono([], m(0, 0, [])) :- !.
+get_last_mono([X | Xs], X) :-
+    Xs == [], !.
+get_last_mono([_ | Xs], Max) :-
+    get_last_mono(Xs, Max).
 
 
 %%% reduce_monomial/2
