@@ -34,11 +34,11 @@
        (let ((vps (fourth mono)))
          (if (listp vps)
              vps
-           (error "le variabili non sono scritte correttamente"))) 
+           (error "le variabili non sono scritte correttamente")))
       (let* ((parsed-mono (as-monomial mono)) (vps (fourth parsed-mono)))
          (if (listp vps)
              vps
-           (error "le variabili non sono scritte correttamente"))))) 
+           (error "le variabili non sono scritte correttamente")))))
 
 
 ;;; monomial-degree/1
@@ -138,7 +138,7 @@ Checks:
 
 
 ;;; vars-of/1
-;;
+;; Gets the VarSymbols from a monomial
 
 (defun vars-of (mono)
   (if (not (and (equal (first mono) 'm) (= (length mono) 4)))
@@ -213,11 +213,11 @@ Checks:
 
 (defun parse-power (expr)
   (if (is-power-not-parsed expr)
-      (if (not (eq (third expr) 0)) (list 'm 1 (third expr) (list 'v (third expr) (second expr))) 
+      (if (not (eq (third expr) 0)) (list 'm 1 (third expr) (list 'v (third expr) (second expr)))
         (list 'm 1 '0 nil)) nil))
 
 
-;;; parse-power-negative-coeff/1 
+;;; parse-power-negative-coeff/1
 ;; Parser an expression (expt VAR EXP) into the form (v EXP VAR) manages a negative coefficient
 
 (defun parse-power-negative-coeff (expr)
