@@ -149,25 +149,8 @@ variables(Poly, Variables) :-
 
 mindegree(poly([]), 0) :- !.
 mindegree(Poly, Degree) :-
-    to_polynomial(Poly, PolyParsed), !,
-    get_variables_from_polynomial(PolyParsed, VPs),
-    get_powers_from_variables(VPs, FinalList),
-    minInList(FinalList, Degree2), !,
-    Degree2 >= 0,
-    Degree is Degree2.
-
-
-%%% minInList/2
-%%% Gets the minimum element in a list
-
-minInList([], 0) :- !.
-minInList([X], X) :- !.
-minInList([X | Xs], M):-
-    minInList(Xs, M),
-    M =< X.
-minInList([X | Xs], X):-
-    minInList(Xs, M),
-    X =< M.
+    to_polynomial(Poly, poly([m(_C, Degree, _VPs) | _Rest])),
+    !.
 
 
 %%% maxdegree/2
@@ -406,7 +389,9 @@ as_polynomial_unordered(Mono, poly([ParsedMono])) :-
 %%% reduced and sorted by grade and lexicographical order.
 
 to_polynomial(Poly, ParsedPoly) :- is_polynomial(Poly), !,
-                                   sort_monomials_in_polynomial(Poly, ParsedPoly).
+                                   sort_monomials_in_polynomial(Poly, Sorted),
+                                   sum_similar_monomials_in_poly(Sorted, Sum),
+                                   remove_coeff_zero(Sum, ParsedPoly).
 to_polynomial(Poly, ParsedPoly) :- as_polynomial(Poly, ParsedPoly).
 
 
@@ -492,7 +477,7 @@ evaluate_mono(m(C, TD, VPs), Alternated, Value) :-
 monomials(poly([]), []) :- !.
 monomials(Poly, Monomials):-
     to_polynomial(Poly, poly(Parsed)), !,
-    sort_monomials_in_polynomial(poly(Parsed), Monomials).
+    sort_monomials_in_polynomial(poly(Parsed), poly(Monomials)).
 
 
 %%% opposite_polynomial/2
