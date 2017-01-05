@@ -19,6 +19,9 @@ is_monomial(m(_C, TD, VPs)) :-
     foreach(member(V, VPs), is_varpower(V)),
     sum_degrees_variables(VPs, TD).
 
+is_monomial(poly([SingleMono])) :-
+    is_monomial(SingleMono).
+
 
 %%% is_varpower/1
 %%% TRUE if the argument is a VP
@@ -31,6 +34,9 @@ is_varpower(v(Power, VarSymbol)) :-
 
 %%% is_polynomial/1
 %%% TRUE if the argument is a list of Momomials
+
+is_polynomial(SingleMono) :-
+  is_monomial(SingleMono).
 
 is_polynomial(poly(Monomials)) :-
     is_list(Monomials),
@@ -149,25 +155,8 @@ variables(Poly, Variables) :-
 
 mindegree(poly([]), 0) :- !.
 mindegree(Poly, Degree) :-
-    to_polynomial(Poly, PolyParsed), !,
-    get_variables_from_polynomial(PolyParsed, VPs),
-    get_powers_from_variables(VPs, FinalList),
-    minInList(FinalList, Degree2), !,
-    Degree2 >= 0,
-    Degree is Degree2.
-
-
-%%% minInList/2
-%%% Gets the minimum element in a list
-
-minInList([], 0) :- !.
-minInList([X], X) :- !.
-minInList([X | Xs], M):-
-    minInList(Xs, M),
-    M =< X.
-minInList([X | Xs], X):-
-    minInList(Xs, M),
-    X =< M.
+    to_polynomial(Poly, poly([m(_C, Degree, _VPs) | _Rest])),
+    !.
 
 
 %%% maxdegree/2
@@ -175,25 +164,20 @@ minInList([X | Xs], X):-
 
 maxdegree(poly([]), 0) :- !.
 maxdegree(Poly, Degree) :-
-    to_polynomial(Poly, PolyParsed), !,
-    get_variables_from_polynomial(PolyParsed, VPs),
-    get_powers_from_variables(VPs, FinalList),
-    maxInList(FinalList, Degree2), !,
+    to_polynomial(Poly, poly(Parsed)), !,
+    get_last_mono(Parsed, m(_, Degree2, _)), !,
     Degree2 >= 0,
     Degree is Degree2.
 
 
-%%% maxInList/2
-%%% Gets the maxiumum element in a list
+%%% get_last_mono/2
+%%% Gets the last monomial in a poly
 
-maxInList([], 0) :- !.
-maxInList([X], X) :- !.
-maxInList([X | Xs], M):-
-    maxInList(Xs, M),
-    M >= X.
-maxInList([X | Xs], X):-
-    maxInList(Xs, M),
-    X >= M.
+get_last_mono([], m(0, 0, [])) :- !.
+get_last_mono([X | Xs], X) :-
+    Xs == [], !.
+get_last_mono([_ | Xs], Max) :-
+    get_last_mono(Xs, Max).
 
 
 %%% reduce_monomial/2
@@ -406,7 +390,9 @@ as_polynomial_unordered(Mono, poly([ParsedMono])) :-
 %%% reduced and sorted by grade and lexicographical order.
 
 to_polynomial(Poly, ParsedPoly) :- is_polynomial(Poly), !,
-                                   sort_monomials_in_polynomial(Poly, ParsedPoly).
+                                   sort_monomials_in_polynomial(Poly, Sorted),
+                                   sum_similar_monomials_in_poly(Sorted, Sum),
+                                   remove_coeff_zero(Sum, ParsedPoly).
 to_polynomial(Poly, ParsedPoly) :- as_polynomial(Poly, ParsedPoly).
 
 
@@ -492,7 +478,7 @@ evaluate_mono(m(C, TD, VPs), Alternated, Value) :-
 monomials(poly([]), []) :- !.
 monomials(Poly, Monomials):-
     to_polynomial(Poly, poly(Parsed)), !,
-    sort_monomials_in_polynomial(poly(Parsed), Monomials).
+    sort_monomials_in_polynomial(poly(Parsed), poly(Monomials)).
 
 
 %%% opposite_polynomial/2
