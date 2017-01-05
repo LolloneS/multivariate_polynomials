@@ -549,7 +549,9 @@ polyplus_call(poly(Monos), poly([]), poly(SortedMonos)) :-
 polyplus_call(poly(M1), poly(M2), poly(Z)) :-
     append(M1, M2, Z1),
     sort_monomials_in_polynomial(poly(Z1), poly(Z2)),
-    sum_similar_monomials_in_poly(poly(Z2), poly(Z)).
+    sum_similar_monomials_in_poly(poly(Z2), poly(Z3)),
+    reduce_all_monos(poly(Z3), poly(Z4)),
+    remove_coeff_zero(poly(Z4), poly(Z)).
 
 
 %%% polyminus/3
@@ -585,7 +587,10 @@ polytimes(Poly1, Poly2, Result) :-
     to_polynomial(Poly1, Poly1Parsed), !,
     to_polynomial(Poly2, Poly2Parsed), !,
     polytimes_call(Poly1Parsed, Poly2Parsed, PolyResult),
-    sum_similar_monomials_in_poly(PolyResult, Result).
+    reduce_all_monos(PolyResult, ResultReduced),
+    sum_similar_monomials_in_poly(ResultReduced, Compressed),
+    remove_coeff_zero(Compressed, Result).
+
 
 %%% polytimes_call/3
 %%% TRUE if 3rd argument is the product between the first and the
