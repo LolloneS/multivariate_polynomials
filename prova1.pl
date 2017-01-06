@@ -23,6 +23,12 @@ is_monomial(poly([SingleMono])) :-
     is_monomial(SingleMono).
 
 
+%%% is_monomial_parsed/1
+%%% TRUE if Mono is a parsed Monomial
+
+is_monomial_parsed(m(_, _, _)) :- !.
+
+
 %%% is_varpower/1
 %%% TRUE if the argument is a VP
 
@@ -112,6 +118,7 @@ get_coefficients_from_polynomialCall(poly([HeadMono | RestMono]),
 %%% coefficients/2
 %%% TRUE if the second arg is the list of the coefficients of the
 %%% monomials composing the polynomial passed as the first arg
+
 
 coefficients(poly([]), []) :- !.
 coefficients(Poly, Coefficients) :-
@@ -389,11 +396,17 @@ as_polynomial_unordered(Mono, poly([ParsedMono])) :-
 %%% TRUE if ParsedPoly is the polynomial Poly parsed,
 %%% reduced and sorted by grade and lexicographical order.
 
-to_polynomial(Poly, ParsedPoly) :- is_polynomial(Poly), !,
-                                   sort_monomials_in_polynomial(Poly, Sorted),
-                                   sum_similar_monomials_in_poly(Sorted, Sum),
-                                   remove_coeff_zero(Sum, ParsedPoly).
-to_polynomial(Poly, ParsedPoly) :- as_polynomial(Poly, ParsedPoly).
+to_polynomial(Mono, ParsedPoly) :-
+    is_monomial(Mono),
+    is_monomial_parsed(Mono), !,
+    as_polynomial(Mono, ParsedPoly).
+to_polynomial(Poly, ParsedPoly) :-
+    is_polynomial(Poly), !,
+    sort_monomials_in_polynomial(Poly, Sorted),
+    sum_similar_monomials_in_poly(Sorted, Sum),
+    remove_coeff_zero(Sum, ParsedPoly).
+to_polynomial(Poly, ParsedPoly) :-
+    as_polynomial(Poly, ParsedPoly).
 
 
 %%% polyval/3
@@ -573,7 +586,8 @@ polytimes(Poly1, Poly2, Result) :-
     to_polynomial(Poly1, Poly1Parsed), !,
     to_polynomial(Poly2, Poly2Parsed), !,
     polytimes_call(Poly1Parsed, Poly2Parsed, PolyResult),
-    reduce_all_monos(PolyResult, ResultReduced),
+    sort_monomials_in_polynomial(PolyResult, Sorted),
+    reduce_all_monos(Sorted, ResultReduced),
     sum_similar_monomials_in_poly(ResultReduced, Compressed),
     remove_coeff_zero(Compressed, Result).
 
