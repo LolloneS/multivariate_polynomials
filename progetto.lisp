@@ -56,11 +56,12 @@
 ;; Returns the monomial's coefficient
 
 (defun monomial-coefficient (mono)
-  (if (and (= (length mono) 4) (eq 'm (first mono)))
-      (let ((coeff (second mono)))
-	(if (numberp coeff) coeff (error "Il coeff non e' un numero")))
+  (if (null mono) 0
+    (if (and (= (length mono) 4) (eq 'm (first mono)))
+        (let ((coeff (second mono)))
+          (if (numberp coeff) coeff (error "Il coeff non e' un numero")))
       (let* ((parsed-mono (as-monomial mono)) (coeff (second parsed-mono)))
-	(if (numberp coeff) coeff (error "Il coeff non e' un numero")))))
+	(if (numberp coeff) coeff (error "Il coeff non e' un numero"))))))
 
 
 #|
@@ -134,7 +135,8 @@ Checks:
 
 (defun coefficients (p)
   (let* ((parsed-p (to-polynomial p)) (monomials (monomials parsed-p)))
-    (mapcar 'monomial-coefficient monomials)))
+    (if (null monomials) '(0)
+      (mapcar 'monomial-coefficient monomials))))
 
 
 ;;; variables/1
@@ -328,10 +330,11 @@ Checks:
 
 (defun as-polynomial (expr)
   (if (is-monomial expr) (to-polynomial expr)
-      (append (list 'poly)
-	      (list
-	       (sum-similar-monos-in-poly
-		(sort-poly (as-polynomial-call expr)))))))
+    (append (list 'poly)
+            (list
+             (remove-coeff-zero 
+              (sum-similar-monos-in-poly
+               (sort-poly (as-polynomial-call expr))))))))
 
 
 ;;; as-polynomial-call/1
@@ -339,7 +342,7 @@ Checks:
 
 (defun as-polynomial-call (expr)
   (when (not (null expr))
-    (if (atom expr) (as-monomial expr)
+    (if (atom expr) (list (as-monomial expr))
 	(let ((head (first expr)) (tail (rest expr)))
 	  (if (is-operator head)
 	      (if (equal head '+) (as-polynomial-call tail) (list (as-monomial expr)))
