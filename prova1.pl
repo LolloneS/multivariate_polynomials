@@ -267,7 +267,7 @@ as_monomial_unordered(SingleVar, m(1, 1, [v(1, SingleVar)])) :-
     atom(SingleVar),
     !.
 as_monomial_unordered(SingleVar ^ Exp, m(1, Exp, [v(Exp, SingleVar)])) :-
-    Exp \= 0, !,
+    Exp \= 0,
     atom(SingleVar), !,
     integer(Exp), !.
 as_monomial_unordered(SingleVar ^ Exp, m(1, 0, [])) :-
