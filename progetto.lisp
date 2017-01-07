@@ -11,24 +11,19 @@
 ;; Returns the exponent from a variable (v Exp VarSymbol)
 
 (defun varpower-power (vp)
-  (if (null vp) (error "Hai passato NIL!")
-      (let ((pow (second vp)))
-	(if (numberp pow) pow (error "L'esponente non e' un numero")))))
+  (let ((pow (second vp)))
+    (if (numberp pow) pow (error "L'esponente non e' un numero"))))
 
 
 ;;; varpower-symbol/1
 ;; Returns the varsymbol from a variable (v Exp VarSymbol)
 
 (defun varpower-symbol (vp)
-  (if (null vp) (error "Hai passato NIL!")
-      (if (not (and (listp vp) (= (length vp) 3)))
-	  (error "Variabile in formato sbagliato")
-	  (let ((vs (third vp)))
-	    (cond ((and
-		    (atom vs)
-		    (not (numberp vs)))
-		   vs)
-		  (T (error "La variabile non e' un carattere")))))))
+  (let ((vs (third vp)))
+    (cond ((and
+	    (atom vs)
+	    (not (numberp vs))) vs)
+	  (T (error "La variabile non e' un carattere")))))
 
 
 ;;; varpowers/1
@@ -62,11 +57,11 @@
 
 (defun monomial-coefficient (mono)
   (if (null mono) 0
-      (if (and (= (length mono) 4) (eq 'm (first mono)))
-	  (let ((coeff (second mono)))
-	    (if (numberp coeff) coeff (error "Il coeff non e' un numero")))
-	  (let* ((parsed-mono (as-monomial mono)) (coeff (second parsed-mono)))
-	    (if (numberp coeff) coeff (error "Il coeff non e' un numero"))))))
+    (if (and (= (length mono) 4) (eq 'm (first mono)))
+        (let ((coeff (second mono)))
+          (if (numberp coeff) coeff (error "Il coeff non e' un numero")))
+      (let* ((parsed-mono (as-monomial mono)) (coeff (second parsed-mono)))
+	(if (numberp coeff) coeff (error "Il coeff non e' un numero"))))))
 
 
 #|
@@ -141,7 +136,7 @@ Checks:
 (defun coefficients (p)
   (let* ((parsed-p (to-polynomial p)) (monomials (monomials parsed-p)))
     (if (null monomials) '(0)
-	(mapcar 'monomial-coefficient monomials))))
+      (mapcar 'monomial-coefficient monomials))))
 
 
 ;;; variables/1
@@ -335,11 +330,11 @@ Checks:
 
 (defun as-polynomial (expr)
   (if (is-monomial expr) (to-polynomial expr)
-      (append (list 'poly)
-	      (list
-	       (remove-coeff-zero 
-		(sum-similar-monos-in-poly
-		 (sort-poly (as-polynomial-call expr))))))))
+    (append (list 'poly)
+            (list
+             (remove-coeff-zero
+              (sum-similar-monos-in-poly
+               (sort-poly (as-polynomial-call expr))))))))
 
 
 ;;; as-polynomial-call/1
@@ -431,9 +426,9 @@ Checks:
 ;; This function creates a list with elements from list1 and list2 alternated
 
 (defun new-pairlis (list1 list2)
-  (cond ((null list1) list2)
-	((null list2) list1)
-	(t (append (list (list (first list1) (first list2)))
+  (if (null list1) nil
+    (if (null list2) (error "Non sono stati passati abbastanza valori!")
+	(append (list (list (first list1) (first list2)))
 		   (new-pairlis (rest list1) (rest list2))))))
 
 
@@ -442,11 +437,11 @@ Checks:
 
 (defun change-sign (monos)
   (if (null monos) nil
-      (let* ((mono1 (first monos))
-	     (c1 (second mono1))
-	     (td (third mono1))
-	     (var-powers (fourth mono1)))
-	(append (list (list 'm (- c1) td var-powers)) (change-sign (rest monos))))))
+    (let* ((mono1 (first monos))
+           (c1 (second mono1))
+           (td (third mono1))
+           (var-powers (fourth mono1)))
+      (append (list (list 'm (- c1) td var-powers)) (change-sign (rest monos))))))
 
 
 
@@ -465,15 +460,16 @@ Checks:
 ;; Evaluates a poly in a certain point in space
 
 (defun polyval (poly value)
-  (if (not (is-polynomial poly)) (polyval (to-polynomial poly) value) 
-      (if (listp value)
-	  (let* ((polyParsed (to-polynomial poly)) 
-                 (vars (variables polyParsed))
-		 (alternate (new-pairlis vars value)) 
-                 (monos (monomials polyParsed))
-		 (monos-with-value (substitute-vars-in-mono monos alternate)))
-	    (evaluate-monos monos-with-value))
-	  (error "I valori non sono in una lista"))))
+  (if (not (equal 'poly (first poly))) (polyval (to-polynomial poly) value)
+    (if (listp value)
+        (let* ((polyParsed (to-polynomial poly))
+               (vars (variables polyParsed))
+               (alternate (new-pairlis vars value)))
+          (if (null vars) (monomial-coefficient (second poly))
+            (let* ((monos (monomials polyParsed))
+                  (monos-with-value (substitute-vars-in-mono monos alternate)))
+              (evaluate-monos monos-with-value))))
+      (error "I valori non sono in una lista"))))
 
 
 ;;; substitute-var-in-vp/2
@@ -482,16 +478,16 @@ Checks:
 
 (defun substitute-var-in-vp (vp alternate)
   (if (null alternate) nil
-      (let* ((var (third vp))
-	     (var-a (first (first alternate)))
-	     (value (second (first alternate)))
-	     (tail (rest alternate))
-	     (expt (second vp)))
-	(if (and (null var) (null expt))
-	    (list 'v 0 0)
-	    (if (eq var var-a)
-		(list 'v expt value)
-		(substitute-var-in-vp vp tail))))))
+    (let* ((var (third vp))
+           (var-a (first (first alternate)))
+           (value (second (first alternate)))
+           (tail (rest alternate))
+           (expt (second vp)))
+      (if (and (null var) (null expt))
+          (list 'v 0 0)
+	(if (eq var var-a)
+	    (list 'v expt value)
+          (substitute-var-in-vp vp tail))))))
 
 
 ;;; substitute-vars-in-vps/2
@@ -551,7 +547,7 @@ Checks:
 (defun polyplus (poly1 poly2)
   (let ((p1 (to-polynomial poly1)) (p2 (to-polynomial poly2)))
     (append (list 'poly)
-            (list (remove-coeff-zero 
+            (list (remove-coeff-zero
                    (sort-poly
                     (sum-similar-monos-in-poly
                      (sort-poly (append (monomials p1)
@@ -564,7 +560,7 @@ Checks:
 (defun polyminus (poly1 poly2)
   (let ((p1 (to-polynomial poly1)) (p2 (to-polynomial poly2)))
     (append (list 'poly)
-            (list (remove-coeff-zero 
+            (list (remove-coeff-zero
                    (sort-poly
                     (sum-similar-monos-in-poly
                      (sort-poly (append (monomials p1)
