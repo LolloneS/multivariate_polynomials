@@ -41,12 +41,11 @@ is_varpower(v(Power, VarSymbol)) :-
 %%% is_polynomial/1
 %%% TRUE if the argument is a list of Momomials
 
+is_polynomial(poly(Monomials)) :-
+    is_list(Monomials), !,
+    foreach(member(M, Monomials), is_monomial(M)).
 is_polynomial(SingleMono) :-
   is_monomial(SingleMono).
-
-is_polynomial(poly(Monomials)) :-
-    is_list(Monomials),
-    foreach(member(M, Monomials), is_monomial(M)).
 
 
 %%% get_power_from_variable/2
