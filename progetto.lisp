@@ -11,19 +11,24 @@
 ;; Returns the exponent from a variable (v Exp VarSymbol)
 
 (defun varpower-power (vp)
-  (let ((pow (second vp)))
-    (if (numberp pow) pow (error "L'esponente non e' un numero"))))
+  (if (null vp) (error "Hai passato NIL!")
+      (let ((pow (second vp)))
+	(if (numberp pow) pow (error "L'esponente non e' un numero")))))
 
 
 ;;; varpower-symbol/1
 ;; Returns the varsymbol from a variable (v Exp VarSymbol)
 
 (defun varpower-symbol (vp)
-  (let ((vs (third vp)))
-    (cond ((and
-	    (atom vs)
-	    (not (numberp vs))) vs)
-	  (T (error "La variabile non e' un carattere")))))
+  (if (null vp) (error "Hai passato NIL!")
+      (if (not (and (listp vp) (= (length vp) 3)))
+	  (error "Variabile in formato sbagliato")
+	  (let ((vs (third vp)))
+	    (cond ((and
+		    (atom vs)
+		    (not (numberp vs)))
+		   vs)
+		  (T (error "La variabile non e' un carattere")))))))
 
 
 ;;; varpowers/1
@@ -57,11 +62,11 @@
 
 (defun monomial-coefficient (mono)
   (if (null mono) 0
-    (if (and (= (length mono) 4) (eq 'm (first mono)))
-        (let ((coeff (second mono)))
-          (if (numberp coeff) coeff (error "Il coeff non e' un numero")))
-      (let* ((parsed-mono (as-monomial mono)) (coeff (second parsed-mono)))
-	(if (numberp coeff) coeff (error "Il coeff non e' un numero"))))))
+      (if (and (= (length mono) 4) (eq 'm (first mono)))
+	  (let ((coeff (second mono)))
+	    (if (numberp coeff) coeff (error "Il coeff non e' un numero")))
+	  (let* ((parsed-mono (as-monomial mono)) (coeff (second parsed-mono)))
+	    (if (numberp coeff) coeff (error "Il coeff non e' un numero"))))))
 
 
 #|
@@ -136,7 +141,7 @@ Checks:
 (defun coefficients (p)
   (let* ((parsed-p (to-polynomial p)) (monomials (monomials parsed-p)))
     (if (null monomials) '(0)
-      (mapcar 'monomial-coefficient monomials))))
+	(mapcar 'monomial-coefficient monomials))))
 
 
 ;;; variables/1
@@ -330,11 +335,11 @@ Checks:
 
 (defun as-polynomial (expr)
   (if (is-monomial expr) (to-polynomial expr)
-    (append (list 'poly)
-            (list
-             (remove-coeff-zero 
-              (sum-similar-monos-in-poly
-               (sort-poly (as-polynomial-call expr))))))))
+      (append (list 'poly)
+	      (list
+	       (remove-coeff-zero 
+		(sum-similar-monos-in-poly
+		 (sort-poly (as-polynomial-call expr))))))))
 
 
 ;;; as-polynomial-call/1
@@ -437,11 +442,11 @@ Checks:
 
 (defun change-sign (monos)
   (if (null monos) nil
-    (let* ((mono1 (first monos))
-           (c1 (second mono1))
-           (td (third mono1))
-           (var-powers (fourth mono1)))
-      (append (list (list 'm (- c1) td var-powers)) (change-sign (rest monos))))))
+      (let* ((mono1 (first monos))
+	     (c1 (second mono1))
+	     (td (third mono1))
+	     (var-powers (fourth mono1)))
+	(append (list (list 'm (- c1) td var-powers)) (change-sign (rest monos))))))
 
 
 
@@ -477,16 +482,16 @@ Checks:
 
 (defun substitute-var-in-vp (vp alternate)
   (if (null alternate) nil
-    (let* ((var (third vp))
-           (var-a (first (first alternate)))
-           (value (second (first alternate)))
-           (tail (rest alternate))
-           (expt (second vp)))
-      (if (and (null var) (null expt))
-          (list 'v 0 0)
-	(if (eq var var-a)
-	    (list 'v expt value)
-          (substitute-var-in-vp vp tail))))))
+      (let* ((var (third vp))
+	     (var-a (first (first alternate)))
+	     (value (second (first alternate)))
+	     (tail (rest alternate))
+	     (expt (second vp)))
+	(if (and (null var) (null expt))
+	    (list 'v 0 0)
+	    (if (eq var var-a)
+		(list 'v expt value)
+		(substitute-var-in-vp vp tail))))))
 
 
 ;;; substitute-vars-in-vps/2
