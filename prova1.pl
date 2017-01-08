@@ -180,8 +180,7 @@ maxdegree(Poly, Degree) :-
 %%% Gets the last monomial in a poly
 
 get_last_mono([], m(0, 0, [])) :- !.
-get_last_mono([X | Xs], X) :-
-    Xs == [], !.
+get_last_mono([X], X) :- !.
 get_last_mono([_ | Xs], Max) :-
     get_last_mono(Xs, Max).
 
