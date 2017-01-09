@@ -57,11 +57,11 @@
 
 (defun monomial-coefficient (mono)
   (if (null mono) 0
-    (if (and (= (length mono) 4) (eq 'm (first mono)))
-        (let ((coeff (second mono)))
-          (if (numberp coeff) coeff (error "Il coeff non e' un numero")))
-      (let* ((parsed-mono (as-monomial mono)) (coeff (second parsed-mono)))
-	(if (numberp coeff) coeff (error "Il coeff non e' un numero"))))))
+      (if (and (= (length mono) 4) (eq 'm (first mono)))
+	  (let ((coeff (second mono)))
+	    (if (numberp coeff) coeff (error "Il coeff non e' un numero")))
+	  (let* ((parsed-mono (as-monomial mono)) (coeff (second parsed-mono)))
+	    (if (numberp coeff) coeff (error "Il coeff non e' un numero"))))))
 
 
 #|
@@ -136,7 +136,7 @@ Checks:
 (defun coefficients (p)
   (let* ((parsed-p (to-polynomial p)) (monomials (monomials parsed-p)))
     (if (null monomials) '(0)
-      (mapcar 'monomial-coefficient monomials))))
+	(mapcar 'monomial-coefficient monomials))))
 
 
 ;;; variables/1
@@ -203,8 +203,12 @@ Checks:
 
 (defun parse-power (expr)
   (if (is-power-not-parsed expr)
-      (if (not (eq (third expr) 0)) (list 'm 1 (third expr) (list 'v (third expr) (second expr)))
-	  (list 'm 1 '0 nil)) nil))
+      (if (not (eq (third expr) 0))
+	  (list 'm 1 (third expr)
+		(list 'v (third expr)
+		      (second expr)))
+	  (list 'm 1 '0 nil))
+      nil))
 
 
 ;;; parse-power-negative-coeff/1
@@ -286,11 +290,18 @@ Checks:
 
 (defun build-varpowers (expr td)
   (let ((head (first expr)) (tail (rest expr)))
-    (cond ((and (listp head) (not (null head)) (not (eq (third head) 0)) (equal (first head) 'expt))
+    (cond ((and (listp head)
+		(not (null head))
+		(not (eq (third head) 0))
+		(equal (first head) 'expt))
            (append (build-varpowers tail (+ (eval td) (eval (third head))))
 		   (list (list 'v (third head) (second head)))))
-          ((and (listp head) (not (null head)) (eq (third head) 0) (equal (first head) 'expt))
-           (append (build-varpowers tail (+ (eval td) (eval (third head)))) nil))
+          ((and (listp head)
+		(not (null head))
+		(eq (third head) 0)
+		(equal (first head) 'expt))
+           (append (build-varpowers tail (+ (eval td) (eval (third head))))
+		   nil))
           ((and (symbolp head) (not (null head)))
            (append (build-varpowers tail (+ 1 (eval td)))
 		   (list (list 'v 1 head))))
@@ -330,11 +341,11 @@ Checks:
 
 (defun as-polynomial (expr)
   (if (is-monomial expr) (to-polynomial expr)
-    (append (list 'poly)
-            (list
-             (remove-coeff-zero
-              (sum-similar-monos-in-poly
-               (sort-poly (as-polynomial-call expr))))))))
+      (append (list 'poly)
+	      (list
+	       (remove-coeff-zero
+		(sum-similar-monos-in-poly
+		 (sort-poly (as-polynomial-call expr))))))))
 
 
 ;;; as-polynomial-call/1
@@ -345,7 +356,9 @@ Checks:
     (if (atom expr) (list (as-monomial expr))
 	(let ((head (first expr)) (tail (rest expr)))
 	  (if (is-operator head)
-	      (if (equal head '+) (as-polynomial-call tail) (list (as-monomial expr)))
+	      (if (equal head '+)
+		  (as-polynomial-call tail)
+		  (list (as-monomial expr)))
 	      (if (and (listp expr) (not (null tail)))
 		  (append (list (as-monomial head)) (as-polynomial-call tail))
 		  (list (as-monomial head))))))))
@@ -427,9 +440,9 @@ Checks:
 
 (defun new-pairlis (list1 list2)
   (if (null list1) nil
-    (if (null list2) (error "Non sono stati passati abbastanza valori!")
-	(append (list (list (first list1) (first list2)))
-		   (new-pairlis (rest list1) (rest list2))))))
+      (if (null list2) (error "Non sono stati passati abbastanza valori!")
+	  (append (list (list (first list1) (first list2)))
+		  (new-pairlis (rest list1) (rest list2))))))
 
 
 ;;; change-sign/1
@@ -437,11 +450,12 @@ Checks:
 
 (defun change-sign (monos)
   (if (null monos) nil
-    (let* ((mono1 (first monos))
-           (c1 (second mono1))
-           (td (third mono1))
-           (var-powers (fourth mono1)))
-      (append (list (list 'm (- c1) td var-powers)) (change-sign (rest monos))))))
+      (let* ((mono1 (first monos))
+	     (c1 (second mono1))
+	     (td (third mono1))
+	     (var-powers (fourth mono1)))
+	(append (list (list 'm (- c1) td var-powers))
+		(change-sign (rest monos))))))
 
 
 
@@ -449,9 +463,12 @@ Checks:
 ;; Checks whether the input is a Poly. If not, the function parses the input
 
 (defun to-polynomial (poly)
-  (cond ((is-polynomial poly) (append (list 'poly) (sort-poly (list (monomials poly)))))
-	((is-monomial poly) (append (list 'poly) (list (list poly))))
-	((if (or (atom poly) (equal '* (first poly))) (to-polynomial (as-monomial poly))
+  (cond ((is-polynomial poly)
+	 (append (list 'poly) (sort-poly (list (monomials poly)))))
+	((is-monomial poly)
+	 (append (list 'poly) (list (list poly))))
+	((if (or (atom poly) (equal '* (first poly)))
+	     (to-polynomial (as-monomial poly))
 	     (as-polynomial poly)))
         (t (error "Not a valid input! EXPECTED: [Poly] or [Monos]"))))
 
@@ -461,15 +478,16 @@ Checks:
 
 (defun polyval (poly value)
   (if (not (equal 'poly (first poly))) (polyval (to-polynomial poly) value)
-    (if (listp value)
-        (let* ((polyParsed (to-polynomial poly))
-               (vars (variables polyParsed))
-               (alternate (new-pairlis vars value)))
-          (if (null vars) (monomial-coefficient (second poly))
-            (let* ((monos (monomials polyParsed))
-                  (monos-with-value (substitute-vars-in-mono monos alternate)))
-              (evaluate-monos monos-with-value))))
-      (error "I valori non sono in una lista"))))
+      (if (listp value)
+	  (let* ((polyParsed (to-polynomial poly))
+		 (vars (variables polyParsed))
+		 (alternate (new-pairlis vars value)))
+	    (if (null vars) (monomial-coefficient (second poly))
+		(let* ((monos (monomials polyParsed))
+		       (monos-with-value
+			(substitute-vars-in-mono monos alternate)))
+		  (evaluate-monos monos-with-value))))
+	  (error "I valori non sono in una lista"))))
 
 
 ;;; substitute-var-in-vp/2
@@ -478,16 +496,16 @@ Checks:
 
 (defun substitute-var-in-vp (vp alternate)
   (if (null alternate) nil
-    (let* ((var (third vp))
-           (var-a (first (first alternate)))
-           (value (second (first alternate)))
-           (tail (rest alternate))
-           (expt (second vp)))
-      (if (and (null var) (null expt))
-          (list 'v 0 0)
-	(if (eq var var-a)
-	    (list 'v expt value)
-          (substitute-var-in-vp vp tail))))))
+      (let* ((var (third vp))
+	     (var-a (first (first alternate)))
+	     (value (second (first alternate)))
+	     (tail (rest alternate))
+	     (expt (second vp)))
+	(if (and (null var) (null expt))
+	    (list 'v 0 0)
+	    (if (eq var var-a)
+		(list 'v expt value)
+		(substitute-var-in-vp vp tail))))))
 
 
 ;;; substitute-vars-in-vps/2
@@ -513,7 +531,8 @@ Checks:
          (td (third head))
 	 (vps-a (substitute-vars-in-vps vps alternate)))
     (if (not (null tail))
-	(append (list (list 'm coef td vps-a)) (substitute-vars-in-mono tail alternate))
+	(append (list (list 'm coef td vps-a))
+		(substitute-vars-in-mono tail alternate))
 	(list (list 'm coef td vps-a)))))
 
 
@@ -664,7 +683,9 @@ Checks:
   (let ((c1 (second m1)) (v&p (fourth m1)))
     (if (equal v&p nil)
         (append (list c1))
-	(append (list c1) (list '*) (pprint-polynomial-call-variables v&p)))))
+	(append (list c1)
+		(list '*)
+		(pprint-polynomial-call-variables v&p)))))
 
 
 ;;; pprint-polynomial-call-variables/1
