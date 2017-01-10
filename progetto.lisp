@@ -212,7 +212,8 @@ Checks:
 
 
 ;;; parse-power-negative-coeff/1
-;; Parser an expression (expt VAR EXP) into the form (v EXP VAR) manages a negative coefficient
+;; Parses an expression (expt VAR EXP) into the form (v EXP VAR) and
+;; manages a negative coefficient
 
 (defun parse-power-negative-coeff (expr)
   (if (is-power-not-parsed expr)
@@ -309,13 +310,17 @@ Checks:
           ((null head) (list td)))))
 
 
-;;; Parses a monomial
+;;; as-monomial/1
+;; Parses a monomial
 ;; NB: per il concetto di atomo in CL, (as-monomial '-x)
 ;; prende -x come simbolo di variabile
 
 (defun as-monomial (expr)
   (compress-vars-in-monomial (sort-monomial (as-monomial-unordered expr))))
 
+
+;;; as-monomial-unordered/1
+;; Parses the input as an unsorted monomial
 
 (defun as-monomial-unordered (expr)
   (cond ((eval-as-number expr) (list 'm (eval expr) 0 nil))
@@ -337,7 +342,7 @@ Checks:
 
 
 ;;; as-polynomial/1
-;; Parses the input as a polynomial
+;; Parses the input as a polynomial, sorts and reduces it
 
 (defun as-polynomial (expr)
   (if (is-monomial expr) (to-polynomial expr)
@@ -349,7 +354,7 @@ Checks:
 
 
 ;;; as-polynomial-call/1
-;; Parses a polynomial
+;; Parses the input as a polynomial
 
 (defun as-polynomial-call (expr)
   (when (not (null expr))
@@ -395,7 +400,7 @@ Checks:
 
 
 ;;; compress-vars-in-monomial/1
-;; This predicate sums the exponents of similiar VPs in a monomial
+;; This function sums the exponents of similiar VPs in a monomial
 
 (defun compress-vars-in-monomial (mono)
   (if (null (varpowers mono)) mono
@@ -406,7 +411,7 @@ Checks:
 
 
 ;;; compress-vps/1
-;; This predicate sums the exponents of of similiar VPs
+;; This function sums the exponents of similiar VPs
 
 (defun compress-vps (vps)
   (if (null vps) nil
@@ -446,7 +451,7 @@ Checks:
 
 
 ;;; change-sign/1
-;; This predicate changes the sign of the coefficients
+;; This function changes the sign of the coefficients
 
 (defun change-sign (monos)
   (if (null monos) nil
@@ -491,7 +496,7 @@ Checks:
 
 
 ;;; substitute-var-in-vp/2
-;; This predicate substitutes variable in a vp with a number
+;; This function substitutes variable in a vp with a number
 ;; (evaluation point of the poly)
 
 (defun substitute-var-in-vp (vp alternate)
@@ -519,8 +524,8 @@ Checks:
 	(list (substitute-var-in-vp head alternate)))))
 
 
-;;; substitute-vars-in-mono\2
-;; This predicate creates a new monomial by substituing the variables with
+;;; substitute-vars-in-mono/2
+;; This function creates a new monomial by substituing the variables with
 ;; the corresponding values appearing in the list "alternate"
 
 (defun substitute-vars-in-mono (monos alternate)
@@ -561,7 +566,7 @@ Checks:
 
 
 ;;; polyplus/2
-;; This predicate calculates calculates the sum of two polynomials
+;; This function returns  the sum of two polynomials
 
 (defun polyplus (poly1 poly2)
   (let ((p1 (to-polynomial poly1)) (p2 (to-polynomial poly2)))
@@ -574,7 +579,7 @@ Checks:
 
 
 ;;; polyminus/2
-;; This predicate calculates the difference of two polynomials
+;; This function returns the difference of two polynomials
 
 (defun polyminus (poly1 poly2)
   (let ((p1 (to-polynomial poly1)) (p2 (to-polynomial poly2)))
@@ -588,7 +593,7 @@ Checks:
 
 
 ;;; polytimes/2
-;; This predicate calclulates the product of two polynomials
+;; This function returns the product of two polynomials, sorted and compressed
 
 (defun polytimes (poly1 poly2)
   (append (list 'poly)
@@ -600,7 +605,7 @@ Checks:
 
 
 ;;; polytimes-call/2
-;;
+;; This function multiplies two polynomials
 
 (defun polytimes-call (monos1 monos2)
   (if (or (null monos1) (null monos2)) nil
@@ -614,7 +619,7 @@ Checks:
 
 
 ;;; mono-times/2
-;;
+;; This function multiplies two monomials
 
 (defun mono-times (mono1 mono2)
   (cond ((null mono1) mono2)
@@ -633,7 +638,7 @@ Checks:
 
 
 ;;; multiply-variables/2
-;;
+;; This function multiplies two VPs
 
 (defun multiply-variables (vps1 vps2)
   (cond ((null vps1) vps2)
@@ -655,14 +660,18 @@ Checks:
 
 
 ;;; pprint-polynomial/1
-;; This predicate prints a polynomial in our "traditional" form
+;; This function prints a polynomial in our "traditional" form
 
 (defun pprint-polynomial (poly)
-  (pprint-polynomial-call (second (to-polynomial poly))))
+  (format t "~a"
+	  (format nil "~a"
+		  (pprint-polynomial-call
+		   (second (to-polynomial poly))))))
+
 
 
 ;;; pprint-polynomial-call/1
-;; This predicate prints a traditional form of poly
+;; This function prints a traditional form of poly
 
 (defun pprint-polynomial-call (mono)
   (let ((m1 (first mono)) (c2 (second (second mono))))
@@ -677,7 +686,7 @@ Checks:
 
 
 ;;; pprint-polynomial-call-coefficients/1
-;; This predicate prints the coefficient of a mono
+;; This function prints the coefficient of a mono
 
 (defun pprint-polynomial-call-coefficients (m1)
   (let ((c1 (second m1)) (v&p (fourth m1)))
@@ -689,7 +698,7 @@ Checks:
 
 
 ;;; pprint-polynomial-call-variables/1
-;; This predicate prints variables and powers of a mono
+;; This function prints variables and powers of a mono
 
 (defun pprint-polynomial-call-variables (var-power)
   (if (null var-power) nil
