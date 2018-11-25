@@ -1,7 +1,0 @@
-polyval:
--parto da (poly (monos))
--estraggo la lista di tutte le variabili
--faccio una lista con le variabili alternate, tipo (list x 1 y 2 z 3)
--estraggo i monomi
--da ogni monomio estraggo le varpowers e sostituisco ad ogni variabile
-    il suo valore
